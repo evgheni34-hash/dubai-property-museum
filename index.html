@@ -168,7 +168,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 <div id="stage"><canvas id="gl" aria-label="3D museum hall. Drag to look, use the arrow buttons to move between exhibits."></canvas></div>
 <div id="fade"></div>
 
-<header id="top">
+<header id="top" hidden>
   <div>
     <div id="roomTag"><span id="rtNum" class="mono">LOBBY</span><span id="rtName">Dubai Property Museum</span></div>
     <div id="miniWrap" hidden><canvas id="mini" aria-label="Floor plan with your position"></canvas><span id="seen" class="mono">Seen <b>0</b> / 43 · rooms <b>0</b> / 8</span></div>
@@ -813,7 +813,7 @@ $("prev").addEventListener("click",()=>go(st.idx<0?0:st.idx-1));
 $("next").addEventListener("click",()=>go(st.idx+1));
 $("helpBtn").addEventListener("click",()=>{const h=$("help");h.hidden=!h.hidden;$("helpBtn").setAttribute("aria-expanded",!h.hidden)});
 let toastT;function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,500)},4200)}
-function enter(i,game){if(!ready)return;$("intro").hidden=true;st.intro=false;$("bar").hidden=false;$("miniWrap").hidden=false;$("soundBtn").hidden=false;
+function enter(i,game){if(!ready)return;$("intro").hidden=true;st.intro=false;$("top").hidden=false;$("bar").hidden=false;$("miniWrap").hidden=false;$("soundBtn").hidden=false;
  if(game)gameStart();else updPill();go(i||0);
  toast(game?"Your first call waits in Room III. Walk on: → for the next exhibit":matchMedia("(pointer:coarse)").matches?"Drag to look · tap the floor to walk · → for the next exhibit":"← → exhibits · drag to look · W A S D to walk")}
 $("enter").addEventListener("click",()=>enter(0,true));
