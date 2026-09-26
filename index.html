@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Walk through 76 years of Dubai real estate in 3D: a central rotunda, four wings, 43 exhibits and a Buy or Don't Buy investing game.">
+<meta property="og:title" content="Dubai Property Museum">
+<meta property="og:description" content="Walk through every boom, bust and rule change that built the Dubai property market, 1950 to 2026. Then play Buy or Don't Buy.">
+<meta property="og:type" content="website">
+<style>html,body{margin:0}</style>
+<title>Dubai Property Museum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{color-scheme:dark;--ink:#16130F;--ink2:#1E1A15;--line:#3A322A;--paper:#F4EFE6;--soft:#D8D0C3;--stone:#9A928A;--red:#C4381F;--redhi:#E0583A;--green:#3FB48F;--brass:#D4AE5E;--acc:#C29A4E;
+--display:'Anton',Impact,'Arial Narrow',sans-serif;--serif:'Source Serif 4',Georgia,'Times New Roman',serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--ink);color:var(--paper);font-family:var(--serif);overflow:hidden}
+.mono{font-family:var(--mono)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+#stage{position:fixed;inset:0}
+#gl{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+#fade{position:fixed;inset:0;background:#0b0907;opacity:0;pointer-events:none;transition:opacity .28s ease;z-index:5}
+
+/* top */
+#top{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0;pointer-events:none;z-index:6}
+#roomTag{display:flex;flex-direction:column;gap:2px;text-shadow:0 1px 12px rgba(0,0,0,.7)}
+#rtNum{font-size:11px;letter-spacing:.16em;color:var(--acc)}
+#rtName{font-family:var(--display);font-size:clamp(20px,3.2vw,30px);letter-spacing:.02em;text-transform:uppercase;line-height:1}
+#helpBtn{pointer-events:auto;width:36px;height:36px;border:1px solid var(--line);background:rgba(22,19,15,.82);font-family:var(--mono);font-size:14px}
+#help{position:fixed;right:16px;top:calc(58px + env(safe-area-inset-top,0px));width:min(300px,calc(100% - 32px));background:rgba(22,19,15,.95);border:1px solid var(--line);padding:14px 16px;z-index:7;font-size:14px;line-height:1.5}
+#help h3{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--stone);margin:0 0 8px;font-weight:400;text-transform:uppercase}
+#help dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0}
+#help dt{font-family:var(--mono);font-size:12px;color:var(--brass)}
+#help dd{margin:0;color:var(--soft)}
+
+/* plaque */
+#plaque{position:fixed;left:16px;bottom:calc(66px + env(safe-area-inset-bottom,0px));width:min(430px,calc(100% - 32px));max-height:calc(100% - 190px);overflow:auto;background:rgba(20,17,13,.93);border:1px solid var(--line);padding:16px 18px 18px;z-index:6;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.pl-head{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+#plYear{color:var(--acc)}
+#plCount{color:var(--stone);font-variant-numeric:tabular-nums}
+#plTitle{font-family:var(--display);font-weight:400;font-size:clamp(24px,3vw,32px);line-height:1.02;text-transform:uppercase;margin:8px 0 10px;text-wrap:balance;letter-spacing:.01em}
+.pl-stat{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--line)}
+#plStat{font-family:var(--display);font-size:30px;line-height:1;color:var(--green)}
+#plStatL{font-size:11px;color:var(--stone);letter-spacing:.04em}
+#plBody{font-size:16px;line-height:1.55;color:var(--soft);margin:12px 0 0;max-width:62ch}
+#plLesson{font-style:italic;font-size:15.5px;line-height:1.45;color:var(--redhi);margin:12px 0 0}
+#plToggle{display:none;margin-top:10px;background:none;border:1px solid var(--line);padding:6px 12px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+
+/* bottom bar */
+#bar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(0deg,rgba(14,12,10,.96),rgba(14,12,10,.75));border-top:1px solid #2a241e;z-index:6}
+.arrow{flex:none;width:40px;height:40px;border:1px solid var(--line);background:var(--ink2);font-family:var(--mono);font-size:16px}
+.arrow:hover{border-color:var(--brass)}
+#chips{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#3a322a transparent}
+.chip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 10px;background:none;border:1px solid transparent;font-family:var(--mono);font-size:11px;color:var(--stone);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip b{font-weight:600;font-size:10px;letter-spacing:.12em;color:#6d655d}
+.chip:hover{color:var(--paper)}
+.chip[aria-current="true"]{color:var(--paper);border-color:var(--line);background:var(--ink2)}
+.chip[aria-current="true"] b{color:var(--c,var(--brass))}
+
+#toast{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:rgba(22,19,15,.92);border:1px solid var(--line);padding:8px 14px;font-family:var(--mono);font-size:12px;color:var(--soft);z-index:6;transition:opacity .5s;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
+
+/* intro */
+#intro{position:fixed;inset:0;z-index:20;overflow:auto;background:linear-gradient(90deg,rgba(18,15,12,.95) 0%,rgba(18,15,12,.9) 48%,rgba(18,15,12,.62) 100%)}
+.in-wrap{max-width:1180px;margin:0 auto;padding:calc(40px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:end;min-height:100%;box-sizing:border-box}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);margin:0 0 18px}
+#intro h1{font-family:var(--display);font-weight:400;font-size:clamp(64px,11.5vw,172px);line-height:.86;text-transform:uppercase;margin:0;letter-spacing:.005em}
+#intro h1 em{font-style:normal;color:var(--red)}
+.lede{font-size:clamp(17px,1.6vw,20px);line-height:1.5;color:var(--soft);max-width:34em;margin:24px 0 28px}
+#enter{background:var(--red);border:0;color:#fff;padding:15px 22px;font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;display:inline-flex;gap:14px;align-items:center}
+#enter:hover{background:#d8431f}
+#enter:disabled{background:#4a3a30;cursor:wait}
+.credit{font-size:11px;letter-spacing:.1em;color:var(--stone);margin:26px 0 0;text-transform:uppercase}
+.credit a,.gm-share a{color:var(--redhi);text-decoration:none;border-bottom:1px solid currentColor}
+.credit a:hover,.gm-share a:hover{color:#fff}
+.rooms{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.rooms li{border-bottom:1px solid var(--line)}
+.rooms button{width:100%;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:baseline;text-align:left;background:none;border:0;padding:12px 4px}
+.rooms button:hover .rn{color:var(--paper)}
+.rooms .rr{font-family:var(--mono);font-size:12px;color:var(--c)}
+.rooms .rn{font-family:var(--display);font-size:22px;text-transform:uppercase;color:var(--soft);letter-spacing:.01em}
+.rooms .ry{font-family:var(--mono);font-size:12px;color:var(--stone);font-variant-numeric:tabular-nums}
+.rooms-h{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--stone);text-transform:uppercase;margin:0 0 10px}
+#err{color:var(--redhi);font-family:var(--mono);font-size:12px}
+
+/* top-right cluster, minimap */
+#tr{display:flex;gap:8px;align-items:center;pointer-events:none}
+#tr>*{pointer-events:auto}
+.hbtn{height:36px;min-width:36px;padding:0 10px;border:1px solid var(--line);background:rgba(22,19,15,.82);font-family:var(--mono);font-size:12px;letter-spacing:.06em}
+.hbtn:hover{border-color:var(--brass)}
+#soundBtn[aria-pressed="true"]{color:var(--brass);border-color:var(--brass)}
+#pill{display:flex;gap:10px;align-items:baseline;background:rgba(22,19,15,.9);border:1px solid var(--brass);font-variant-numeric:tabular-nums}
+#pill b{font-family:var(--display);font-weight:400;font-size:17px;color:var(--paper);letter-spacing:.02em}
+#pill span{color:var(--stone);font-size:11px}
+#miniWrap{margin-top:10px;display:flex;flex-direction:column;gap:5px;pointer-events:auto}
+#mini{width:132px;height:132px;cursor:pointer;border:1px solid #2e2720;background:rgba(14,12,10,.7);display:block}
+#seen{font-size:11px;letter-spacing:.08em;color:var(--stone);font-variant-numeric:tabular-nums}
+#seen b{color:var(--paper);font-weight:600}
+.chip.done b::after{content:" ✓";color:var(--green)}
+
+/* game modal */
+#gm{position:fixed;inset:0;z-index:15;display:grid;place-items:center;padding:16px;background:rgba(8,6,5,.66);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.gm-card{width:min(560px,100%);max-height:calc(100% - 8px);overflow:auto;background:#17130F;border:1px solid var(--gmc,var(--brass));padding:24px 24px 20px;box-sizing:border-box;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.gm-eye{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gmc,var(--brass));margin:0 0 14px}
+.gm-prev{border:1px solid var(--line);background:#1E1A15;padding:12px 14px;margin:0 0 18px}
+.gm-prev p{margin:0}
+.gm-prev .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--stone);text-transform:uppercase}
+.gm-prev .v{font-family:var(--display);font-size:40px;line-height:1.05;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.gm-prev .o{font-size:14.5px;line-height:1.45;color:var(--soft)}
+.gm-when{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);margin:0 0 6px}
+.gm-card h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,5vw,40px);line-height:1;text-transform:uppercase;margin:0 0 10px;text-wrap:balance}
+.gm-ctx{font-size:16px;line-height:1.5;color:var(--soft);margin:0 0 18px}
+.gm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gm-btns button{border:0;padding:14px 12px;text-align:left;display:flex;flex-direction:column;gap:3px;color:#fff}
+.gm-btns button b{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.02em}
+.gm-btns button span{font-family:var(--mono);font-size:11px;opacity:.85}
+#gmBuy{background:#1E8A6A}#gmBuy:hover{background:#23a07b}
+#gmCash{background:#C4381F}#gmCash:hover{background:#d8431f}
+.gm-fine{font-size:12px;line-height:1.45;color:var(--stone);margin:14px 0 0}
+.gm-link{background:none;border:0;padding:0;color:var(--stone);text-decoration:underline;font-size:12px;margin-top:8px}
+.gm-big{font-family:var(--display);font-size:clamp(52px,10vw,76px);line-height:.95;color:var(--brass);margin:0;font-variant-numeric:tabular-nums}
+.gm-rank{font-family:var(--display);font-size:24px;text-transform:uppercase;margin:6px 0 4px}
+.gm-say{font-size:15.5px;line-height:1.5;color:var(--soft);margin:0 0 16px}
+.bars{display:grid;gap:7px;margin:0 0 16px}
+.bar{display:grid;grid-template-columns:118px 1fr 64px;gap:10px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--soft);font-variant-numeric:tabular-nums}
+.bar i{display:block;height:12px;background:var(--bc,#5d544a);transform-origin:left;animation:grow .9s ease-out both}
+.bar em{font-style:normal;text-align:right;color:var(--paper)}
+@keyframes grow{from{transform:scaleX(0)}}
+.calls{list-style:none;margin:0 0 16px;padding:0;border-top:1px solid var(--line)}
+.calls li{display:grid;grid-template-columns:96px 1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--soft);align-items:baseline}
+.calls .e{font-family:var(--mono);font-size:11px;color:var(--stone)}
+.calls .ok{color:var(--green);font-family:var(--mono);font-size:12px}
+.calls .no{color:var(--redhi);font-family:var(--mono);font-size:12px}
+.gm-share{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--brass);text-transform:uppercase;margin:0 0 14px}
+.gm-row{display:flex;gap:10px;flex-wrap:wrap}
+.gm-row button{padding:12px 16px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);background:#1E1A15}
+.gm-row button.pri{background:var(--red);border-color:var(--red);color:#fff}
+.in-btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#walk{background:none;border:1px solid var(--line);padding:14px 20px;font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+#walk:hover{border-color:var(--brass)}
+#walk:disabled{opacity:.5;cursor:wait}
+.game-note{font-size:14px;color:var(--stone);margin:12px 0 0;max-width:34em;line-height:1.5}
+
+@media (max-width:760px){
+ #mini{width:96px;height:96px}
+ #pill b{font-size:15px}
+ .gm-card{padding:18px 16px 16px}
+ .gm-btns button b{font-size:22px}
+ .bar{grid-template-columns:96px 1fr 56px}
+ .in-wrap{grid-template-columns:1fr;gap:34px;align-items:start}
+ #intro{background:rgba(18,15,12,.9)}
+ #plaque{bottom:calc(66px + env(safe-area-inset-bottom,0px));max-height:46%;padding:12px 14px 14px}
+ #plaque:not(.open) #plMore{display:none}
+ #plToggle{display:inline-block}
+ #plTitle{font-size:22px;margin:6px 0 8px}
+ #plStat{font-size:24px}
+ .chip{padding:5px 8px}
+}
+@media (prefers-reduced-motion:reduce){#fade,#toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="stage"><canvas id="gl" aria-label="3D museum hall. Drag to look, use the arrow buttons to move between exhibits."></canvas></div>
+<div id="fade"></div>
+
+<header id="top">
+  <div>
+    <div id="roomTag"><span id="rtNum" class="mono">LOBBY</span><span id="rtName">Dubai Property Museum</span></div>
+    <div id="miniWrap" hidden><canvas id="mini" aria-label="Floor plan with your position"></canvas><span id="seen" class="mono">Seen <b>0</b> / 43 · rooms <b>0</b> / 8</span></div>
+  </div>
+  <div id="tr">
+    <button id="pill" class="hbtn" hidden aria-label="Portfolio"><b id="pillV">AED 1.00m</b><span id="pillS">0 / 6 calls</span></button>
+    <button id="soundBtn" class="hbtn" aria-pressed="false" hidden>♪ Music off</button>
+    <button id="helpBtn" class="hbtn" aria-label="Show controls" aria-expanded="false">?</button>
+  </div>
+</header>
+<div id="gm" hidden role="dialog" aria-modal="true" aria-label="Buy or Don't Buy"><div class="gm-card" id="gmCard"></div></div>
+<div id="help" hidden>
+  <h3>Controls</h3>
+  <dl>
+    <dt>← →</dt><dd>Previous / next exhibit</dd>
+    <dt>Drag</dt><dd>Look around</dd>
+    <dt>W A S D, ↑ ↓</dt><dd>Walk freely</dd>
+    <dt>Tap</dt><dd>An exhibit to visit it, the floor to walk there</dd>
+    <dt>Bar</dt><dd>Jump to any era</dd>
+  </dl>
+</div>
+
+<article id="plaque" hidden>
+  <div class="pl-head"><span id="plYear"></span><span id="plCount"></span></div>
+  <h2 id="plTitle"></h2>
+  <div class="pl-stat"><span id="plStat"></span><span id="plStatL" class="mono"></span></div>
+  <div id="plMore"><p id="plBody"></p><p id="plLesson" hidden></p></div>
+  <button id="plToggle" aria-expanded="false">Read the plaque</button>
+</article>
+
+<nav id="bar" aria-label="Museum navigation" hidden>
+  <button class="arrow" id="prev" aria-label="Previous exhibit">←</button>
+  <div id="chips"></div>
+  <button class="arrow" id="next" aria-label="Next exhibit">→</button>
+</nav>
+<div id="toast" hidden></div>
+
+<section id="intro" aria-label="Welcome">
+  <div class="in-wrap">
+    <div>
+      <p class="eyebrow mono">1950 → September 2026 · 8 rooms · 43 exhibits</p>
+      <h1>Dubai<br>Property<br><em>Museum</em></h1>
+      <p class="lede">Walk through every boom, bust and rule change that built the Dubai market, from pearl divers on the Creek to the slowdown of 2026. Each room is one cycle. The red lines are what that cycle taught.</p>
+      <div class="in-btns">
+        <button id="enter" disabled>Building the halls… <span aria-hidden="true">→</span></button>
+        <button id="walk" disabled>Just walk</button>
+      </div>
+      <p class="game-note"><b style="color:var(--paper)">Buy or Don't Buy.</b> Start with AED 1,000,000 in 2002. Six rooms, six calls: buy property or sit in cash. See how your calls played out, then compare yourself to perfect timing.</p>
+      <p id="err" hidden></p>
+      <p class="credit mono">Curated by Eugene · <a href="https://www.youtube.com/@EugeneUnfiltered" target="_blank" rel="noopener">▶ YouTube: @EugeneUnfiltered</a></p>
+    </div>
+    <div>
+      <p class="rooms-h">The rooms</p>
+      <ol class="rooms" id="roomList"></ol>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+const W=18,L=22,H=7,DOOR=4,DOOR_H=4.3,NR=9,WT=.3,FW=3.0,FH=2.5,EYE=1.65;
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ROMAN=['','I','II','III','IV','V','VI','VII','VIII'];
+const ROOMS=[
+ {t:"Lobby",y:"Start",acc:"#E0B85C",wall:"#3A2C20",sky:["#1d1733","#7a3f55","#e79a5a"],sun:"#ffd59a",sunX:.84,sunY:.74,sunR:24,p:{m:"dust",c:"#FFD89A"},
+  mural:{grow:true,maxH:150,dens:.85,near:"#1a1420",far:"#4a2f45",win:"#FFD27A",lit:.3,bk:[.93,178]}},
+ {t:"The Creek Years",y:"1950–1996",acc:"#E8B46A",wall:"#6B4526",sky:["#2e2256","#b8513a","#f6c47c"],sun:"#ffe0a0",sunX:.26,sunY:.6,sunR:28,water:"#2c5a66",p:{m:"sand",c:"#F4CF8E"},
+  mural:{low:true,maxH:26,dens:.7,near:"#2a1a14",win:"#ffcf7a",lit:.18,wind:10,palms:9,dhows:7}},
+ {t:"Building the Postcard",y:"1997–2001",acc:"#4FC3F0",wall:"#174560",sky:["#2f8fd0","#8fd0f0","#f3ead0"],sun:"#fff6d8",sunX:.84,sunY:.3,sunR:20,water:"#1f7fa6",p:{m:"bubble",c:"#BFEFFF"},
+  mural:{maxH:66,dens:.35,near:"#16384c",far:"#6aa8c8",win:"#dff4ff",lit:.1,sail:.3,etw:.64,palms:5}},
+ {t:"Freehold Fever",y:"2002–2008",acc:"#FFB835",wall:"#5E4210",sky:["#e86a1c","#f7b64a","#fde6a0"],sun:"#fff1c0",sunX:.55,sunY:.55,sunR:32,p:{m:"rise",c:"#FFD35A"},
+  mural:{maxH:115,dens:.9,near:"#3a2208",far:"#b8702a",win:"#ffe29a",lit:.3,cranes:18}},
+ {t:"The Crash",y:"2008–2011",acc:"#FF4B32",wall:"#4E1510",sky:["#0c0406","#4a0f12","#b8321c"],p:{m:"fall",c:"#FF7A5A"},flicker:true,
+  mural:{maxH:118,dens:.8,near:"#140507",far:"#4a1a18",win:"#ff9a6a",lit:.05,cranes:12,skel:12,bk:[.72,176]}},
+ {t:"The Expo Rebound",y:"2012–2014",acc:"#3EE0A6",wall:"#10483B",sky:["#0b3346","#2a9a8a","#c6f0cf"],sun:"#f4ffe6",sunX:.1,sunY:.7,sunR:22,p:{m:"rise",c:"#8CFFD2"},
+  mural:{maxH:112,dens:.75,near:"#07261f",far:"#2b7a6a",win:"#c8ffe8",lit:.25,bk:[.52,176],dome:.2}},
+ {t:"The Long Slide",y:"2015–2020",acc:"#B39BFF",wall:"#2F2560",sky:["#0c0a24","#3a2d78","#9a74c4"],moon:true,stars:90,sunX:.16,sunY:.24,p:{m:"snow",c:"#D8CCFF"},
+  mural:{maxH:122,dens:.8,near:"#120d2c",far:"#3e3470",win:"#cfc0ff",lit:.1,frame:.36,bk:[.78,176]}},
+ {t:"The Great Migration",y:"2021–2023",acc:"#2FE6C8",wall:"#0E4C48",sky:["#071c2c","#0f6272","#5ed6c6"],stars:40,p:{m:"drift",c:"#9CFFF0"},
+  mural:{maxH:130,dens:.95,near:"#051a1c",far:"#1e5a60",win:"#aaffef",lit:.4,bk:[.6,178],planes:6}},
+ {t:"Records and Reckoning",y:"2024–Now",acc:"#FFC94A",wall:"#433008",sky:["#04050e","#171c46","#6b3f8a"],moon:true,stars:140,sunX:.86,sunY:.2,p:{m:"spark",c:"#FFE08A"},
+  mural:{maxH:140,dens:1,near:"#07070f",far:"#2a2150",win:"#ffe08a",lit:.55,bk:[.5,182],frame:.18,cranes:7,metro:true}}
+];
+// Buy or Don't Buy: illustrative, rounded multipliers (price move plus rent for property, deposit interest for cash).
+const GAME=[
+ {r:3,when:"May 2002",era:"2002 → 2008",q:"Freehold just opened. Buy?",ctx:"Foreigners can own property for the first time. Dubai Marina launches sell out in hours and buyers flip contracts before the second instalment.",prop:2.6,cash:1.2,out:"Prices roughly doubled into the 2008 peak, plus six years of rent."},
+ {r:4,when:"September 2008",era:"2008 → 2011",q:"Record prices. Hold or get out?",ctx:"Prices just set a record. Lehman Brothers has failed. Your broker says Dubai is different this time.",prop:.55,cash:1.05,out:"Prices in the hardest-hit areas halved. Rent softened the blow a little."},
+ {r:5,when:"Early 2012",era:"2012 → 2014",q:"Half price. Buy the bottom?",ctx:"Prices are down by about half from the peak. Headlines still talk about ghost towers. Tourism is quietly picking up.",prop:1.7,cash:1.02,out:"Prime areas rebounded hard until the regulator stepped in."},
+ {r:6,when:"Late 2014",era:"2015 → 2020",q:"Oil is sliding. Stay in?",ctx:"Oil is falling and the dollar is strong. The transfer fee just doubled and mortgages are capped. Developers start offering long payment plans.",prop:.95,cash:1.1,out:"Prices slid about 30%, but six years of rent almost covered it for owners who held. Flippers were hurt far more."},
+ {r:7,when:"Mid 2020",era:"2020 → 2023",q:"Lockdown. Anyone buying?",ctx:"The world is in lockdown and prices are six years into a slide. Nobody is calling the bottom.",prop:1.65,cash:1.05,out:"That was the bottom. Prices rose about 50% as people moved to Dubai."},
+ {r:8,when:"January 2024",era:"2024 → mid 2026",q:"Two record years. One more?",ctx:"Launches sell out again. Transactions are at an all-time high. Analysts warn about the supply wave due in 2025 to 2027.",prop:1.3,cash:1.1,out:"Another record in 2025, then a dip of a few percent in 2026. Still up, with rent."}
+];
+const PRICE=[[3.02,1.0,"2002 · freehold"],[3.5,1.55],[3.96,2.4,"2008 peak"],[4.4,1.2],[4.9,1.05,"2011 bottom"],[5.15,1.12],[5.95,1.8,"2014"],[6.25,1.72],[6.95,1.25,"2020 bottom"],[7.2,1.32],[7.95,1.9,"2023"],[8.55,2.35,"2025 record"],[8.93,2.18,"mid-2026"]];
+const BUILDERS=[["Emaar","1997","Downtown Dubai · Dubai Marina"],["Nakheel","2000","Palm Jumeirah · The World"],["DAMAC","2002","DAMAC Hills · Lagoons"],["Select Group","2002","Marina Gate · Peninsula"],["Omniyat","2005","The Opus · Business Bay"],["Meraas","2007","City Walk · Bluewaters"],["Azizi","2007","Riviera · Al Furjan"],["Binghatti","2008","Jumeirah Village · Business Bay"],["Ellington","2014","Design-led boutique towers"],["Danube","2014","1% monthly payment plans"]];
+
+// Exhibits in tour order. Slots per room: A (left near), C (right near), E (centre), B (left far), D (right far).
+const X=[
+{r:0,slot:"LW",y:"Start here",t:"How to walk the museum",s:"8 rooms",c:"b",sl:"1950 → September 2026",b:"Press → to walk exhibit by exhibit and ← to step back. Drag to look around. W A S D or ↑ ↓ walk freely. Tap an exhibit or a spot on the floor to move there. This rotunda opens into four wings, two eras each. The bar at the bottom and the floor plan jump between eras.",l:"Watch for the red lines. They are what each cycle taught."},
+{r:0,slot:"RW",kind:"builders",y:"Hall of builders",t:"The master builders",s:"10",c:"b",sl:"developers that shaped the skyline, by founding year",b:"Emaar 1997, Nakheel 2000, DAMAC 2002, Select Group 2002, Omniyat 2005, Meraas 2007, Azizi 2007, Binghatti 2008, Ellington 2014, Danube 2014. The government-linked master developers set the map. The private developers filled it in.",l:"Judge a developer by what it handed over, not by its renders."},
+
+{r:1,m:"pearl",y:"Before 1930s",t:"The pearl economy",s:"1930s",c:"b",sl:"cultured pearls end the trade",b:"Before oil and towers, Dubai lived off pearl diving from the Creek. When Japanese cultured pearls flooded world markets in the 1930s, the trade collapsed. The town survived by turning into a low-tax port for re-export.",l:"Dubai's first pivot came from a crash, not a plan."},
+{r:1,m:"dhow",y:"1959–1961",t:"Dredging the Creek",s:"Debt first",c:"r",sl:"demand later",b:"Sheikh Rashid borrowed, largely from Kuwait, to dredge Dubai Creek so bigger ships could dock. It was a debt-financed bet on infrastructure before the demand existed. The city would repeat that pattern for sixty years."},
+{r:1,m:"dwtc",y:"1979",t:"Dubai World Trade Centre",s:"39 floors",c:"g",sl:"tallest building in the region when it opened",b:"Built on empty land on the road to Abu Dhabi and opened by Queen Elizabeth II. Critics said it was too far from town. Sheikh Zayed Road and a whole business district later grew around it.",l:"Location is whatever the city decides to build next to you."},
+{r:1,m:"port",y:"1979 / 1985",t:"Jebel Ali Port and Free Zone",s:"100%",c:"g",sl:"foreign ownership of companies inside JAFZA",b:"Jebel Ali became one of the largest man-made harbours in the world. Its free zone, opened in 1985, let foreign companies own their business outright. Foreign capital could own a company here long before it could own a home."},
+{r:1,y:"Until 2002",t:"Land you could not buy",s:"Zero",c:"r",sl:"freehold titles available to foreigners",b:"For decades expatriates could rent, work and trade in Dubai, but not own property. Land sat with UAE nationals and government entities. The market in the next rooms did not exist until the law changed.",l:"Every boom starts with a rule change."},
+
+{r:2,y:"1997",t:"Emaar is founded",s:"Master plan",c:"b",sl:"one developer, whole districts",b:"Emaar Properties was set up in 1997 and became the master developer behind Dubai Marina, Arabian Ranches and Downtown Dubai. Master developers, not single buildings, decided where value would sit.",l:"Follow the master developer, not the building."},
+{r:2,m:"bab",y:"1999",t:"Burj Al Arab",s:"321 m",c:"g",sl:"a hotel on its own artificial island",b:"A hotel built as an advertisement. The sail-shaped tower put Dubai on magazine covers around the world before most people could find it on a map. Tourists came first. Property buyers followed them."},
+{r:2,m:"etowers",y:"2000",t:"Emirates Towers",s:"355 m",c:"g",sl:"office tower on Sheikh Zayed Road",b:"Two triangular towers that turned Sheikh Zayed Road into a skyline. They set the template for the next decade: build the landmark first, then sell the land around it."},
+{r:2,m:"palm",y:"2001",t:"The Palm Jumeirah is announced",s:"94m m³",c:"g",sl:"of sand dredged from the Gulf",b:"Nakheel announced an island shaped like a palm tree. Beachfront is scarce, so the developer manufactured more of it. Villas on the fronds went on sale while the island was still open sea."},
+{r:2,y:"The playbook",t:"Sell the city, then the square metre",s:"Icon → land",c:"b",sl:"how government-linked developers made money",b:"Each icon of this era lifted the value of the plots around it. The same government-linked groups owned the landmark and the land next to it, so the marketing paid for itself.",l:"When a developer builds a landmark, ask who owns the land next to it."},
+
+{r:3,m:"scroll",y:"May 2002",t:"Freehold for foreigners",s:"Freehold",c:"g",sl:"in designated areas, for any nationality",b:"A decree by Sheikh Mohammed opened designated areas to freehold ownership by foreign nationals. Law No. 7 of 2006 wrote it into the land registry. Demand from the whole world was unlocked in one move."},
+{r:3,m:"marina",y:"2003–2008",t:"Dubai Marina and JLT",s:"10% down",c:"r",sl:"then flip before the next instalment",b:"Towers sold floor by floor from brochures. Buyers paid a small deposit and many resold the contract before the second payment was due. Launch days had overnight queues."},
+{r:3,m:"world",y:"2003",t:"The World islands",s:"300",c:"g",sl:"islands arranged as a map of the world",b:"Nakheel sold whole islands to private buyers. The sand was placed, but most islands still had no buildings more than a decade later. It is the purest monument to off-plan optimism."},
+{r:3,m:"crane",y:"2006",t:"The crane myth",s:"25%?",c:"r",sl:"of the world's cranes, a claim nobody verified",b:"A line repeated everywhere said a quarter of the world's construction cranes stood in Dubai. Nobody ever produced the count. It spread because it felt true, and that feeling was the market.",l:"When a statistic sounds like marketing, it probably is."},
+{r:3,y:"2007",t:"RERA and escrow arrive",s:"Law No. 8",c:"g",sl:"of 2007: off-plan money goes into escrow",b:"The Real Estate Regulatory Agency was set up and developers had to hold buyer payments in escrow accounts tied to construction. The rules arrived late in the boom, but they are why off-plan today is safer than in 2008.",l:"Rules get written after the damage, not before."},
+
+{r:4,m:"crash",y:"Q3 2008 → 2010",t:"The fall",s:"−50–60%",c:"r",sl:"peak to trough in the hardest-hit areas",b:"After Lehman Brothers failed in September 2008, credit disappeared. Flippers could not pay the next instalment and could not find a buyer. Prices in the most speculative districts roughly halved. Bars are schematic."},
+{r:4,y:"26 Nov 2009",t:"Dubai World asks for a standstill",s:"$26bn",c:"r",sl:"of debt put on hold",b:"The state-linked conglomerate behind Nakheel asked creditors to wait. Global markets fell the next day. The question stopped being where prices would land and became who would pay."},
+{r:4,m:"bk",y:"4 Jan 2010",t:"Burj Khalifa opens",s:"828 m",c:"g",sl:"the world's tallest building",b:"Planned in the boom and finished in the bust. The tower was renamed on opening day after Sheikh Khalifa bin Zayed, President of the UAE and ruler of Abu Dhabi. Downtown Dubai around it was one of the first districts to recover.",l:"The tallest tower opened at the bottom of the market."},
+{r:4,y:"Dec 2009",t:"Abu Dhabi steps in",s:"$10bn",c:"g",sl:"support to meet Dubai's debt payments",b:"Abu Dhabi provided 10 billion dollars and Nakheel repaid its maturing sukuk on time. Three weeks later the world's tallest tower opened under a new name."},
+{r:4,y:"2009–2011",t:"Projects that never came up",s:"Stalled",c:"r",sl:"towers left as foundations and frames",b:"Many launched projects never got past the ground. Regulators later cancelled a long list of them and ordered refunds from escrow. Buyers whose money sat in escrow got some of it back. Many who paid before escrow existed did not.",l:"Your off-plan risk is the developer, not the tower."},
+
+{r:5,y:"2012",t:"Buyers return",s:"Safe haven",c:"g",sl:"capital moves in during the Arab Spring",b:"Prices had fallen far enough to look cheap, and Dubai looked stable next to its neighbours. Tourism and trade picked up first, then buyers came back. By 2013 prices were rising fast again."},
+{r:5,m:"globe13",y:"27 Nov 2013",t:"Dubai wins Expo 2020",s:"Expo 2020",c:"g",sl:"awarded by the BIE member vote",b:"Winning the World Expo gave the market a date to build toward. Launches restarted and the pipeline filled again, this time with a deadline attached."},
+{r:5,m:"prime",y:"2013",t:"Prime recovers first",s:"Finished",c:"b",sl:"beats promised",b:"Recovery was uneven. Established communities with finished roads, schools and retail rebounded first: Downtown, Dubai Marina, the Palm. Remote plots sold in the boom stayed cheap for years.",l:"In a recovery, finished beats promised."},
+{r:5,y:"Oct 2013",t:"Transfer fee doubles",s:"2% → 4%",c:"r",sl:"Dubai Land Department fee on every sale",b:"The Land Department doubled the fee paid on each transfer. Flipping became more expensive overnight, which was the point."},
+{r:5,y:"Dec 2013",t:"Mortgage caps",s:"75%",c:"r",sl:"max loan-to-value, expat first home under AED 5m",b:"The UAE Central Bank capped mortgage lending. Expats could borrow up to 75% on a first home under AED 5 million and less above it. Leverage, the fuel of 2008, was rationed.",l:"This time the regulator cooled the market on purpose."},
+
+{r:6,m:"barrel",y:"2014–2016",t:"Oil halves, then halves again",s:"$115 → $30",c:"r",sl:"Brent crude, mid-2014 to early 2016",b:"Gulf liquidity shrank with the oil price. The strong US dollar, to which the dirham is pegged, made Dubai expensive for European and Russian buyers at the same time."},
+{r:6,y:"2015–2019",t:"Payment plans get generous",s:"1%",c:"r",sl:"a month, stretched past handover",b:"With buyers scarce, developers started carrying the financing themselves. Small monthly instalments ran for years after handover. Sales volumes held up. Resale prices did not.",l:"A generous payment plan is a developer telling you demand is thin."},
+{r:6,m:"dframe",y:"Jan 2018",t:"The Dubai Frame opens",s:"150 m",c:"g",sl:"a picture frame between old and new Dubai",b:"It opened the same month VAT arrived in the UAE. Supply kept growing through the slide as projects launched in the good years reached completion."},
+{r:6,y:"2019",t:"Residency for property investors",s:"AED 5m",c:"b",sl:"of property for a 5-year visa under the 2019 rules",b:"The UAE introduced long-term residence visas, including a route for property investors. The threshold was high and uptake was modest, but it was the first time residency was tied to real estate."},
+{r:6,y:"2020",t:"The bottom",s:"≈ −30%",c:"r",sl:"from 2014 levels across much of the market",b:"By mid-2020, after six years of decline and a pandemic lockdown, many areas traded roughly a third below 2014. Few buyers were willing to call it the bottom. It was.",l:"Nobody rings a bell at the bottom."},
+
+{r:7,y:"2020–2021",t:"Open while the world was shut",s:"Remote",c:"g",sl:"work visa launched October 2020",b:"Dubai reopened to tourists in July 2020, ran a fast vaccination campaign and launched a visa for remote workers. People who could work from anywhere came to look, and many stayed."},
+{r:7,m:"globe21",y:"Oct 2021 – Mar 2022",t:"Expo 2020, one year late",s:"24m",c:"g",sl:"visits recorded",b:"Held a year late under its original name. It put the city in front of millions of visitors at exactly the moment buyers were deciding where to move."},
+{r:7,m:"key",y:"2022",t:"The AED 2m Golden Visa",s:"AED 2m",c:"b",sl:"of property for a 10-year Golden Visa",b:"The property route to a 10-year visa settled at AED 2 million, and off-plan and mortgaged homes could qualify under conditions. Buying a home became a residency decision."},
+{r:7,m:"chart23",y:"2021–2023",t:"Volume explodes",s:"AED 634bn",c:"g",sl:"total real estate transactions in 2023",b:"Total transactions went from about AED 300bn in 2021 to AED 528bn in 2022 and AED 634bn in 2023. Buyers arrived from Russia, Europe, India and the UK at the same time."},
+{r:7,m:"palmja",y:"2023",t:"Palm Jebel Ali returns",s:"21 years",c:"b",sl:"from first reclamation in 2002 to relaunch",b:"Nakheel revived the second Palm, abandoned after the crash. Villas launched at prices nobody would have believed in 2010. The crash's leftovers became the boom's new product.",l:"Every cycle resells the last one's unfinished projects."},
+
+{r:8,m:"chart25",y:"2024–2025",t:"Back-to-back records",s:"AED 917bn",c:"b",sl:"270,000+ transactions in 2025",b:"2024 closed at about AED 761bn. 2025 beat it by roughly 20%, with more than 270,000 transactions and 129,600 first-time investors entering the market (Dubai Land Department)."},
+{r:8,m:"plane",y:"Apr 2024",t:"Al Maktoum airport expansion",s:"AED 128bn",c:"g",sl:"for what is planned as the world's largest airport",b:"The government approved a new passenger terminal at Al Maktoum International in Dubai South. Operations are planned to move there from DXB over time, which rewrote the long-term story for the south of the city."},
+{r:8,m:"metro",y:"2023 → 2029",t:"Metro Blue Line",s:"30 km",c:"g",sl:"new line, opening targeted for 2029",b:"A new line linking Mirdif, Dubai Creek Harbour, International City and Dubai Silicon Oasis. Transport lines are the most reliable map of where values move next."},
+{r:8,m:"coins",y:"Target 2033",t:"The trillion-dirham target",s:"AED 1tn",c:"b",sl:"annual transactions, Real Estate Sector Strategy 2033",b:"The strategy aims to lift transaction value by 70% to AED 1 trillion. The target is set by the seller, so read it as intent, not a forecast."},
+{r:8,y:"H1 2026",t:"The first test",s:"AED 286bn",c:"r",sl:"H1 2026 sales, down from AED 327bn in H1 2025",b:"Sales fell about 12% year on year after regional conflict early in the year, though it was still the second-best first half on record. In Q2 secondary deals fell far more than off-plan, prices slipped about 3% and 56,600 units are due by year end. Most analysts call it a pause.",l:"Cycles don't repeat. They rhyme on supply."},
+{r:8,slot:"END",y:"2027 →",t:"This room is still empty",s:"?",c:"r",sl:"the next cycle",b:"Every room here was built by the same forces: a rule change, cheap money, a landmark, too much supply, a correction. Use them to judge the next launch you are offered. Curated by Eugene. Deal breakdowns on YouTube: @EugeneUnfiltered.",l:"The best deal is sometimes the one you don't buy."}
+];
+const SLOTS=["A","C","E","B","D"];
+{const cnt={};X.forEach(e=>{if(!e.slot){cnt[e.r]=cnt[e.r]||0;e.slot=SLOTS[cnt[e.r]++]}})}
+const firstIdx=ROOMS.map((_,r)=>X.findIndex(e=>e.r===r));
+
+// ---------- DOM ----------
+const $=id=>document.getElementById(id);
+const roomLabel=r=>r?"Room "+ROMAN[r]:"Rotunda";
+const statCol={g:"#3FB48F",b:"#D4AE5E",r:"#E0583A"};
+const roomList=$("roomList");
+ROOMS.forEach((R,r)=>{if(!r)return;const li=document.createElement("li");li.innerHTML=`<button type="button" style="--c:${R.acc}"><span class="rr">${ROMAN[r]}</span><span class="rn">${R.t}</span><span class="ry">${R.y}</span></button>`;li.firstChild.addEventListener("click",()=>enter(firstIdx[r]));roomList.appendChild(li)});
+const chips=$("chips");
+ROOMS.forEach((R,r)=>{const b=document.createElement("button");b.type="button";b.className="chip";b.style.setProperty("--c",R.acc);b.innerHTML=`<b>${r?"ROOM "+ROMAN[r]:"START"}</b>${r?R.y.replace("–Now","–26"):"Rotunda"}`;b.addEventListener("click",()=>go(firstIdx[r]));chips.appendChild(b)});
+
+if(typeof THREE==="undefined"){$("enter").textContent="3D engine failed to load";$("err").hidden=false;$("err").textContent="The Three.js library could not be loaded. Check your connection and reload the page.";return}
+
+// ---------- helpers ----------
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const M=(c,r=.6,m=0,e,ei=1)=>{const o={color:c,roughness:r,metalness:m};if(e){o.emissive=new THREE.Color(e);o.emissiveIntensity=ei}return new THREE.MeshStandardMaterial(o)};
+const B=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
+const Cy=(a,b,h,s=24)=>new THREE.CylinderGeometry(a,b,h,s);
+function mesh(g,m,x=0,y=0,z=0){const o=new THREE.Mesh(g,m);o.position.set(x,y,z);return o}
+function mix(a,b,t){return new THREE.Color(a).lerp(new THREE.Color(b),t)}
+function wrap(ctx,text,maxW){const words=String(text).split(" ");const out=[];let line="";for(const w of words){const t=line?line+" "+w:w;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out}
+function tex(c){const t=new THREE.CanvasTexture(c);t.anisotropy=ANISO;return t}
+const F={disp:px=>`${px}px Anton, Impact, "Arial Narrow", sans-serif`,mono:(px,w="400")=>`${w} ${px}px "JetBrains Mono", Menlo, Consolas, monospace`,serif:(px,i="")=>`${i} ${px}px "Source Serif 4", Georgia, serif`};
+let ANISO=4;
+
+function frameTex(e){
+ const c=document.createElement("canvas");c.width=1200;c.height=1000;const x=c.getContext("2d");
+ x.fillStyle=mix(ROOMS[e.r].acc,"#17130F",.9).getStyle();x.fillRect(0,0,1200,1000);
+ const acc=ROOMS[e.r].acc,P=72,MW=1200-2*P;let y=P;
+ x.fillStyle=acc;x.fillRect(P,y,70,6);y+=52;
+ x.font=F.mono(28,"600");x.fillText((e.y+"   ·   "+roomLabel(e.r)).toUpperCase(),P,y);y+=14;
+ x.font=F.disp(84);x.fillStyle="#F4EFE6";wrap(x,e.t.toUpperCase(),MW).slice(0,2).forEach(l=>{y+=88;x.fillText(l,P,y)});y+=20;
+ x.font=F.disp(124);x.fillStyle=statCol[e.c]||acc;y+=122;x.fillText(e.s,P,y);
+ x.font=F.mono(26);x.fillStyle="#9A928A";wrap(x,e.sl,MW).slice(0,2).forEach(l=>{y+=40;x.fillText(l,P,y)});y+=26;
+ x.font=F.serif(34);x.fillStyle="#D8D0C3";
+ const maxY=1000-P-(e.l?112:0);const lines=wrap(x,e.b,MW);
+ for(let i=0;i<lines.length;i++){if(y+48>maxY){break}let l=lines[i];if(i<lines.length-1&&y+96>maxY)l=l.replace(/[\s,.;:]*$/,"")+"…";y+=48;x.fillText(l,P,y)}
+ if(e.l){x.fillStyle="#C4381F";x.fillRect(P,1000-P-92,MW,3);x.font=F.serif(32,"italic");x.fillStyle="#EE7A5E";wrap(x,e.l,MW).slice(0,2).forEach((l,i)=>x.fillText(l,P,1000-P-44+i*40))}
+ return tex(c)}
+function buildersTex(e){
+ const c=document.createElement("canvas");c.width=1200;c.height=1000;const x=c.getContext("2d");
+ x.fillStyle="#1B1713";x.fillRect(0,0,1200,1000);const P=72;
+ x.fillStyle="#D4AE5E";x.fillRect(P,P,70,6);x.font=F.mono(28,"600");x.fillText("HALL OF BUILDERS   ·   FOUNDED",P,P+52);
+ x.font=F.disp(84);x.fillStyle="#F4EFE6";x.fillText("THE MASTER BUILDERS",P,P+150);
+ let y=P+220;BUILDERS.forEach(([n,yr,sig],i)=>{x.fillStyle="#2E2720";x.fillRect(P,y+18,1200-2*P,2);x.font=F.mono(30,"600");x.fillStyle="#D4AE5E";x.fillText(yr,P,y);x.font=F.disp(44);x.fillStyle="#F4EFE6";x.fillText(n.toUpperCase(),P+120,y+2);x.font=F.serif(28,"italic");x.fillStyle="#9A928A";x.textAlign="right";x.fillText(sig,1200-P,y);x.textAlign="left";y+=66});
+ return tex(c)}
+function plaqueTex(e){
+ const c=document.createElement("canvas");c.width=1100;c.height=560;const x=c.getContext("2d");
+ x.fillStyle=mix(ROOMS[e.r].acc,"#17130F",.9).getStyle();x.fillRect(0,0,1100,560);const acc=ROOMS[e.r].acc,P=56,MW=1100-2*P;let y=P;
+ x.fillStyle=acc;x.fillRect(P,y,60,5);y+=44;x.font=F.mono(24,"600");x.fillText((e.y+"   ·   "+roomLabel(e.r)).toUpperCase(),P,y);y+=8;
+ x.font=F.disp(64);x.fillStyle="#F4EFE6";wrap(x,e.t.toUpperCase(),MW).slice(0,2).forEach(l=>{y+=70;x.fillText(l,P,y)});y+=16;
+ x.font=F.disp(92);x.fillStyle=statCol[e.c]||acc;y+=92;x.fillText(e.s,P,y);
+ x.font=F.mono(22);x.fillStyle="#9A928A";wrap(x,e.sl,MW).slice(0,2).forEach(l=>{y+=34;x.fillText(l,P,y)});
+ return tex(c)}
+function signTex(r){
+ const c=document.createElement("canvas");c.width=1600;c.height=280;const x=c.getContext("2d");const R=ROOMS[r];
+ x.fillStyle="#14110E";x.fillRect(0,0,1600,280);x.fillStyle=R.acc;x.fillRect(0,272,1600,8);
+ x.font=F.disp(170);x.fillText(ROMAN[r],48,200);const w=x.measureText(ROMAN[r]).width;
+ x.font=F.disp(96);x.fillStyle="#F4EFE6";x.fillText(R.t.toUpperCase(),w+110,150);
+ x.font=F.mono(34,"600");x.fillStyle="#9A928A";x.fillText(("Room "+ROMAN[r]+"   ·   "+R.y).toUpperCase(),w+114,218);
+ return tex(c)}
+function panelTex(kind){
+ const c=document.createElement("canvas");c.width=1000;c.height=640;const x=c.getContext("2d");
+ x.fillStyle="#14110E";x.fillRect(0,0,1000,640);
+ if(kind==="title"){x.font=F.mono(28,"600");x.fillStyle="#D4AE5E";x.fillText("EST. 1950 · UPDATED SEP 2026",56,80);x.font=F.disp(150);x.fillStyle="#F4EFE6";x.fillText("DUBAI",52,240);x.fillText("PROPERTY",52,400);x.fillStyle="#C4381F";x.fillText("MUSEUM",52,560)}
+ else{x.font=F.disp(150);x.fillStyle="#F4EFE6";x.fillText("1950 → 2026",52,200);x.font=F.mono(34,"600");x.fillStyle="#D4AE5E";x.fillText("8 ROOMS · 43 EXHIBITS",56,280);x.font=F.serif(38);x.fillStyle="#D8D0C3";wrap(x,"Four wings, two eras each. Start with Wing A, the door between these panels, and walk the cycle clockwise.",880).forEach((l,i)=>x.fillText(l,56,360+i*54));
+  x.font=F.mono(30,"600");x.fillStyle="#E0583A";x.fillText("▶  YOUTUBE · @EUGENEUNFILTERED",56,580)}
+ return tex(c)}
+function label(text,col,h=.14){const c=document.createElement("canvas");const x=c.getContext("2d");const px=64;x.font=F.mono(px,"600");const w=Math.ceil(x.measureText(text).width)+24;c.width=w;c.height=Math.ceil(px*1.4);x.font=F.mono(px,"600");x.fillStyle=col;x.textBaseline="middle";x.fillText(text,12,c.height/2);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(c),transparent:true,depthWrite:false}));s.scale.set(h*w/c.height,h,1);return s}
+function winTex(seed,lit="#F3D9A0",bg="#27303A"){const c=document.createElement("canvas");c.width=64;c.height=128;const x=c.getContext("2d");x.fillStyle=bg;x.fillRect(0,0,64,128);const R=rng(seed);for(let r=0;r<16;r++)for(let q=0;q<8;q++){x.fillStyle=R()<.42?lit:"#3A4652";x.fillRect(q*8+2,r*8+2,4,5)}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+function towerMat(seed,rx,ry,tint="#ffffff",ei=.55){const t=winTex(seed);t.repeat.set(rx,ry);return new THREE.MeshStandardMaterial({map:t,color:tint,emissive:new THREE.Color("#ffffff"),emissiveMap:t,emissiveIntensity:ei,roughness:.45})}
+
+// ---------- murals, floors, particles ----------
+function hexA(h,a){const c=new THREE.Color(h);return`rgba(${Math.round(c.r*255)},${Math.round(c.g*255)},${Math.round(c.b*255)},${a})`}
+function city(x,rnd,o){let px=-12;const Wc=x.canvas.width;
+ while(px<Wc){const w=o.low?20+rnd()*34:14+rnd()*40;const gap=rnd()<(1-o.dens)*.7?10+rnd()*46:1+rnd()*4;
+  const mh=o.grow?14+o.maxH*Math.pow(Math.max(0,px)/Wc,1.3):o.maxH;const h=o.low?8+rnd()*o.maxH*.8:mh*(.22+rnd()*.78);
+  x.fillStyle=o.col;x.fillRect(px,o.base-h,w,h);
+  if(o.low&&rnd()<.25){x.beginPath();x.arc(px+w/2,o.base-h,w*.28,Math.PI,0);x.fill()}
+  if(!o.low&&h>40&&rnd()<.18)x.fillRect(px+w/2-1,o.base-h-14,2,14);
+  if(o.win){x.fillStyle=o.win;for(let wy=o.base-h+5;wy<o.base-4;wy+=6)for(let wx=px+3;wx<px+w-3;wx+=5)if(rnd()<o.lit)x.fillRect(wx,wy,2,3)}
+  px+=w+gap}}
+const LM={
+ bk(x,cx,base,h,col){x.fillStyle=col;const n=9;for(let i=0;i<n;i++){const w=36*(1-i/n*.85);x.fillRect(cx-w/2,base-h*.78*(i+1)/n,w,h*.78/n+1)}x.fillRect(cx-1.5,base-h,3,h*.24)},
+ sail(x,cx,base,h,col){x.fillStyle=col;x.beginPath();x.moveTo(cx,base);x.lineTo(cx,base-h);x.quadraticCurveTo(cx+h*.52,base-h*.45,cx+h*.34,base);x.closePath();x.fill();x.fillRect(cx-4,base-h-8,3,h+8)},
+ etw(x,cx,base,h,col){x.fillStyle=col;[[cx,h,16],[cx+30,h*.85,14]].forEach(([X0,H0,w])=>{x.fillRect(X0,base-H0,w,H0);x.beginPath();x.moveTo(X0,base-H0);x.lineTo(X0+w,base-H0);x.lineTo(X0,base-H0-w*1.1);x.fill()})},
+ frame(x,cx,base,h,col){x.fillStyle=col;x.fillRect(cx-32,base-h,11,h);x.fillRect(cx+21,base-h,11,h);x.fillRect(cx-32,base-h,64,11)},
+ dome(x,cx,base,col){x.strokeStyle=col;x.lineWidth=2;for(let i=0;i<4;i++){x.beginPath();x.ellipse(cx,base,50,50-i*11,0,Math.PI,0);x.stroke()}for(let a=0;a<=8;a++){x.beginPath();x.moveTo(cx,base-50);x.lineTo(cx-50+a*12.5,base);x.stroke()}},
+ crane(x,cx,base,h,col){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=2;x.beginPath();x.moveTo(cx,base);x.lineTo(cx,base-h);x.moveTo(cx-16,base-h);x.lineTo(cx+56,base-h);x.stroke();x.fillRect(cx-18,base-h,8,7);x.lineWidth=1;x.beginPath();x.moveTo(cx+44,base-h);x.lineTo(cx+44,base-h+22);x.stroke()},
+ skel(x,cx,base,h,col){x.strokeStyle=col;x.lineWidth=1.5;const w=26;x.strokeRect(cx,base-h,w,h);for(let y=base-h;y<base;y+=9){x.beginPath();x.moveTo(cx,y);x.lineTo(cx+w,y);x.stroke()}x.beginPath();x.moveTo(cx+w/2,base-h);x.lineTo(cx+w/2,base);x.stroke()},
+ wind(x,cx,base,col){x.fillStyle=col;x.fillRect(cx-18,base-20,36,20);x.fillRect(cx-6,base-36,12,17);x.fillStyle="rgba(255,220,160,.35)";for(let i=0;i<3;i++)x.fillRect(cx-4+i*3,base-33,1.4,9)},
+ palm(x,cx,base,h,col){x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();x.moveTo(cx,base);x.quadraticCurveTo(cx+6,base-h/2,cx+3,base-h);x.stroke();x.lineWidth=2;for(let i=0;i<7;i++){const a=-Math.PI+i*(Math.PI/6);x.beginPath();x.moveTo(cx+3,base-h);x.quadraticCurveTo(cx+3+Math.cos(a)*10,base-h-8,cx+3+Math.cos(a)*18,base-h+Math.abs(Math.sin(a))*2+6);x.stroke()}},
+ dhow(x,cx,y,col){x.fillStyle=col;x.beginPath();x.moveTo(cx-22,y-6);x.lineTo(cx+24,y-8);x.lineTo(cx+14,y);x.lineTo(cx-14,y);x.closePath();x.fill();x.fillStyle="rgba(250,236,210,.85)";x.beginPath();x.moveTo(cx-10,y-8);x.lineTo(cx+16,y-40);x.lineTo(cx+10,y-8);x.closePath();x.fill()},
+ plane(x,cx,y){x.strokeStyle="rgba(255,255,255,.35)";x.lineWidth=1.5;x.beginPath();x.moveTo(cx-120,y+14);x.lineTo(cx-6,y+1);x.stroke();x.fillStyle="#f4f7fa";x.fillRect(cx-8,y-1,18,3);x.fillRect(cx-1,y-6,4,12);x.fillRect(cx-8,y-4,3,4)}
+};
+function paintMural(r){
+ const R=ROOMS[r],S=R.mural,c=document.createElement("canvas");c.width=2048;c.height=200;const x=c.getContext("2d"),rnd=rng(100+r),Wc=2048,Hc=200;
+ const g=x.createLinearGradient(0,0,0,Hc);R.sky.forEach((s,i)=>g.addColorStop(i/(R.sky.length-1),s));x.fillStyle=g;x.fillRect(0,0,Wc,Hc);
+ if(R.stars){x.fillStyle="#fff";for(let i=0;i<R.stars;i++){x.globalAlpha=.25+rnd()*.75;x.fillRect(rnd()*Wc,rnd()*Hc*.6,1.6,1.6)}x.globalAlpha=1}
+ if(R.sun){const sx=R.sunX*Wc,sy=R.sunY*Hc,sr=R.sunR;const sg=x.createRadialGradient(sx,sy,0,sx,sy,sr*4);sg.addColorStop(0,hexA(R.sun,.55));sg.addColorStop(1,hexA(R.sun,0));x.fillStyle=sg;x.fillRect(0,0,Wc,Hc);x.fillStyle=R.sun;x.beginPath();x.arc(sx,sy,sr,0,7);x.fill()}
+ if(R.moon){const sx=R.sunX*Wc,sy=R.sunY*Hc;x.fillStyle="#F4F0FF";x.beginPath();x.arc(sx,sy,15,0,7);x.fill();x.fillStyle=R.sky[0];x.beginPath();x.arc(sx+7,sy-4,13,0,7);x.fill()}
+ const base=R.water?Hc-30:Hc;
+ if(S.planes)for(let i=0;i<S.planes;i++)LM.plane(x,120+rnd()*(Wc-160),18+rnd()*54);
+ if(S.far)city(x,rnd,{base,maxH:S.maxH*.72,dens:S.dens,col:S.far,grow:S.grow});
+ if(S.bk)LM.bk(x,S.bk[0]*Wc,base,S.bk[1],S.near);
+ if(S.sail!=null)LM.sail(x,S.sail*Wc,base,120,S.near);
+ if(S.etw!=null)LM.etw(x,S.etw*Wc,base,118,S.near);
+ if(S.frame!=null)LM.frame(x,S.frame*Wc,base,108,S.near);
+ if(S.dome!=null)LM.dome(x,S.dome*Wc,base,S.near);
+ if(S.skel)for(let i=0;i<S.skel;i++)LM.skel(x,rnd()*Wc,base,50+rnd()*70,S.near);
+ if(S.cranes)for(let i=0;i<S.cranes;i++)LM.crane(x,rnd()*Wc,base,S.maxH*(.7+rnd()*.45),S.near);
+ city(x,rnd,{base,maxH:S.low?S.maxH:S.maxH*.8,dens:S.dens,col:S.near,win:S.win,lit:S.lit,grow:S.grow,low:S.low});
+ if(S.wind)for(let i=0;i<S.wind;i++)LM.wind(x,40+rnd()*(Wc-80),base,S.near);
+ if(S.palms)for(let i=0;i<S.palms;i++)LM.palm(x,rnd()*Wc,base,26+rnd()*20,S.near);
+ if(R.water){x.fillStyle=R.water;x.fillRect(0,base,Wc,Hc-base);x.fillStyle="rgba(255,255,255,.22)";for(let i=0;i<90;i++)x.fillRect(rnd()*Wc,base+4+rnd()*(Hc-base-6),10+rnd()*30,1.2);
+  if(S.dhows)for(let i=0;i<S.dhows;i++)LM.dhow(x,60+rnd()*(Wc-120),base+14+rnd()*10,S.near)}
+ if(S.metro){x.fillStyle="#1a1a2a";x.fillRect(0,Hc-26,Wc,5);for(let px=20;px<Wc;px+=70)x.fillRect(px,Hc-22,5,22);
+  for(let i=0;i<4;i++){const tx=rnd()*(Wc-160);x.fillStyle="#e8edf2";x.fillRect(tx,Hc-36,150,10);x.fillStyle="#2b6cb0";x.fillRect(tx,Hc-29,150,3);x.fillStyle="#bfe6ff";for(let k=0;k<14;k++)x.fillRect(tx+5+k*10,Hc-34,6,3)}}
+ x.fillStyle=R.acc;x.fillRect(0,Hc-3,Wc,3);
+ return tex(c)}
+function floorTex(r){const R=ROOMS[r],c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d");
+ const a=mix(R.acc,"#100D0B",.84).getStyle(),b=mix(R.acc,"#100D0B",.9).getStyle();
+ for(let i=0;i<4;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)%2?a:b;x.fillRect(i*64,j*64,64,64)}
+ x.strokeStyle="rgba(0,0,0,.45)";x.lineWidth=2;for(let i=0;i<=4;i++){x.beginPath();x.moveTo(i*64,0);x.lineTo(i*64,256);x.moveTo(0,i*64);x.lineTo(256,i*64);x.stroke()}
+ x.fillStyle=hexA(R.acc,.55);for(let i=0;i<=4;i++)for(let j=0;j<=4;j++){x.save();x.translate(i*64,j*64);x.rotate(Math.PI/4);x.fillRect(-4,-4,8,8);x.restore()}
+ const t=tex(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(W/4,L/4);return t}
+function dotTex(){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(.35,"rgba(255,255,255,.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)}
+
+// ---------- models ----------
+const bobs=[];
+const WATER=()=>M("#1B5566",.25,.1);
+const SAND=()=>M("#D9C49A",.95);
+const GOLD=()=>M("#D4AE5E",.28,.65,"#3a2a08",.6);
+const MODELS={
+ pearl(){const g=new THREE.Group();const sm=M("#CDB89A",.5,.05);sm.side=THREE.DoubleSide;
+  const bowl=mesh(new THREE.SphereGeometry(.5,32,12,0,Math.PI*2,Math.PI/2,Math.PI/2),sm,0,.24,0);bowl.scale.y=.45;g.add(bowl);
+  const lid=mesh(new THREE.SphereGeometry(.5,32,12,0,Math.PI*2,0,Math.PI/2),sm,0,.3,-.36);lid.scale.y=.45;lid.rotation.x=-1.1;g.add(lid);
+  const nac=mesh(new THREE.CircleGeometry(.48,32),M("#EADFCF",.3,.2),0,.24,0);nac.rotation.x=-Math.PI/2;g.add(nac);
+  const p=mesh(new THREE.SphereGeometry(.2,32,24),M("#FBF6EE",.12,.1,"#8a8070",.35),0,.42,.05);g.add(p);return{g,h:.9}},
+ dhow(){const g=new THREE.Group();g.add(mesh(Cy(.9,.9,.05,40),WATER(),0,.025,0));
+  const s=new THREE.Shape();s.moveTo(-.85,.32);s.lineTo(.95,.42);s.quadraticCurveTo(.55,-.02,.15,-.08);s.lineTo(-.45,-.08);s.quadraticCurveTo(-.78,-.02,-.85,.32);
+  const hg=new THREE.ExtrudeGeometry(s,{depth:.32,bevelEnabled:true,bevelSize:.04,bevelThickness:.05,bevelSegments:2,curveSegments:16});hg.translate(0,0,-.16);
+  g.add(mesh(hg,M("#7A4A2A",.75),0,.16,0));g.add(mesh(B(1.5,.03,.3),M("#A9794C",.8),.05,.5,0));
+  g.add(mesh(Cy(.022,.03,1.5,8),M("#4E321E",.8),.05,1.2,0));
+  const sl=new THREE.Shape();sl.moveTo(-.6,.1);sl.lineTo(.8,1.35);sl.quadraticCurveTo(.5,.62,.42,.05);sl.lineTo(-.6,.1);
+  const sm=M("#EFE6D2",.8);sm.side=THREE.DoubleSide;g.add(mesh(new THREE.ShapeGeometry(sl,16),sm,0,.62,.02));return{g,h:2.1}},
+ dwtc(){const g=new THREE.Group();g.add(mesh(B(1.1,.06,1.1),M("#3A332C",.8),0,.03,0));
+  g.add(mesh(B(.5,1.9,.5),towerMat(3,3,14,"#E8E2D6",.45),0,1.0,0));g.add(mesh(B(.58,.1,.58),M("#CFC6B6",.6),0,2.0,0));
+  g.add(mesh(Cy(.012,.012,.36,6),M("#999",.5),0,2.23,0));return{g,h:2.4}},
+ port(){return MODELS.crane(true)},
+ crane(cont){const g=new THREE.Group();const red=M("#B8432A",.55,.2);
+  g.add(mesh(B(.09,2.25,.09),red,-.25,1.13,0));g.add(mesh(B(1.55,.07,.07),red,.4,2.18,0));g.add(mesh(B(.55,.07,.07),red,-.6,2.18,0));
+  g.add(mesh(B(.2,.16,.13),M("#444",.7),-.78,2.08,0));g.add(mesh(B(.15,.13,.13),M("#E7E1D6",.5),-.25,2.08,.1));
+  g.add(mesh(B(.03,.4,.03),red,-.25,2.42,0));g.add(mesh(Cy(.005,.005,.9,4),M("#222"),.85,1.7,0));g.add(mesh(B(.07,.09,.07),M("#D4AE5E",.4,.4),.85,1.22,0));
+  g.add(mesh(B(.34,.05,.34),M("#2E2A26",.8),-.25,.025,0));
+  if(cont){const cols=["#1E6B58","#C4381F","#96712F","#4E7F99","#7C7570"];const R=rng(11);for(let i=0;i<9;i++){const b=mesh(B(.38,.16,.17),M(cols[i%5],.7),.15+(i%3)*.4-.1,.08+Math.floor(i/3)*.165,(R()-.5)*.25+.25);g.add(b)}}
+  return{g,h:2.5}},
+ bab(){const g=new THREE.Group();g.add(mesh(Cy(.5,.58,.08,32),SAND(),0,.04,0));g.add(mesh(Cy(.9,.9,.03,40),WATER(),0,.015,0));
+  const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(0,2.0);s.quadraticCurveTo(.95,1.15,.62,0);s.lineTo(0,0);
+  const sg=new THREE.ExtrudeGeometry(s,{depth:.26,bevelEnabled:true,bevelSize:.015,bevelThickness:.015,bevelSegments:1,curveSegments:24});sg.translate(-.28,0,-.13);
+  g.add(mesh(sg,M("#EEF1F3",.35,0,"#3a4550",.25),0,.08,0));
+  const ex=M("#B8BFC5",.4,.3);g.add(mesh(B(.05,2.2,.34),ex,-.3,1.18,0));for(let i=0;i<4;i++)g.add(mesh(B(.08,.03,.4),ex,-.3,.5+i*.42,0));
+  g.add(mesh(Cy(.13,.13,.02,24),M("#ddd",.5),.22,1.66,.18));return{g,h:2.3}},
+ etowers(){const g=new THREE.Group();g.add(mesh(B(1.2,.05,.8),M("#3A332C",.8),0,.025,0));
+  const a=towerMat(5,2,12,"#A9BCC6",.35),b=towerMat(9,2,10,"#A9BCC6",.35),cap=M("#9FB2BC",.25,.5);
+  g.add(mesh(Cy(.32,.32,1.95,3),a,-.3,1.02,0));g.add(mesh(new THREE.ConeGeometry(.32,.38,3),cap,-.3,2.18,0));
+  g.add(mesh(Cy(.27,.27,1.6,3),b,.34,.85,.08));g.add(mesh(new THREE.ConeGeometry(.27,.32,3),cap,.34,1.81,.08));return{g,h:2.4}},
+ palm(big){const o=new THREE.Group(),inner=new THREE.Group();o.add(mesh(Cy(.05,.07,.5,12),M("#3A332C",.7),0,.25,0));o.add(inner);inner.position.y=.55;o.rotation.x=0;
+  const tilt=new THREE.Group();tilt.rotation.x=.6;tilt.position.y=.55;tilt.add(inner);inner.position.y=0;o.add(tilt);
+  const R=big?1.02:.95;inner.add(mesh(Cy(R,R,.04,48),WATER(),0,0,0));const sand=big?M("#E3CFA2",.95):SAND();
+  inner.add(mesh(B(.12,.06,.6),sand,0,.04,.34));inner.add(mesh(Cy(.13,.13,.06,20),sand,0,.04,.02));
+  const n=big?11:9;for(let i=0;i<n;i++){const a=-1.25+i*(2.5/(n-1));const dx=Math.sin(a),dz=-Math.cos(a);const len=big?.56:.5;const f=mesh(B(.05,.05,len),sand,dx*(len/2+.08),.04,.02+dz*(len/2+.08));f.rotation.y=Math.atan2(dx,dz);inner.add(f)}
+  const tc=.625*Math.PI;const tg=new THREE.TorusGeometry(big?.86:.78,.035,6,72,Math.PI*1.25);tg.rotateX(Math.PI/2);tg.rotateY(tc+Math.PI/2);inner.add(mesh(tg,sand,0,.04,0));
+  return{g:o,h:1.6,spin:inner}},
+ palmja(){return MODELS.palm(true)},
+ scroll(){const g=new THREE.Group();const c=document.createElement("canvas");c.width=560;c.height=400;const x=c.getContext("2d");
+  x.fillStyle="#EBE1CB";x.fillRect(0,0,560,400);x.fillStyle="#6B5A44";x.font=F.mono(20,"600");x.fillText("DUBAI · MAY 2002",40,56);x.fillStyle="#1B1713";x.font=F.disp(70);x.fillText("DECREE",40,140);
+  x.font=F.serif(26);wrap(x,"Freehold ownership is opened to foreign nationals in designated areas of the emirate.",440).forEach((l,i)=>x.fillText(l,40,190+i*36));
+  x.fillStyle="#B0301B";x.beginPath();x.arc(470,330,38,0,7);x.fill();x.fillStyle="#EBE1CB";x.font=F.disp(26);x.fillText("DLD",446,340);
+  const paper=mesh(new THREE.PlaneGeometry(1.12,.8),new THREE.MeshStandardMaterial({map:tex(c),roughness:.9}),0,.85,0);paper.rotation.x=-.3;g.add(paper);
+  const wood=M("#6B4426",.6);[.4,-.4].forEach(dy=>{const r=mesh(Cy(.045,.045,1.24,16),wood,0,.85+dy*Math.cos(.3),dy*Math.sin(.3)*-1);r.rotation.z=Math.PI/2;g.add(r)});
+  g.add(mesh(B(.05,.8,.05),M("#3A332C"),-.35,.4,-.12));g.add(mesh(B(.05,.8,.05),M("#3A332C"),.35,.4,-.12));return{g,h:1.4,spin:false}},
+ marina(prime){const g=new THREE.Group();g.add(mesh(B(1.4,.04,1.2),M("#3A332C",.8),0,.02,0));g.add(mesh(B(1.4,.02,.16),WATER(),0,.045,.05));
+  const R=rng(prime?21:7);const pos=[[-.5,-.35],[-.18,-.4],[.14,-.33],[.46,-.28],[-.48,.36],[-.14,.42],[.2,.38],[.52,.3]];
+  pos.forEach(([px,pz],i)=>{const h=.7+R()*1.5,w=.16+R()*.08;const hi=prime&&(i===1||i===3||i===6);const m=hi?M("#D4AE5E",.3,.5,"#5a4214",.5):towerMat(30+i,1,Math.round(h*6),"#D6DEE3",.5);
+   const geo=i%3===0?Cy(w*.6,w*.6,h,16):B(w,h,w);g.add(mesh(geo,m,px,.04+h/2,pz))});return{g,h:2.2}},
+ prime(){return MODELS.marina(true)},
+ world(){const o=new THREE.Group(),tilt=new THREE.Group(),inner=new THREE.Group();tilt.rotation.x=.75;tilt.position.y=.62;o.add(mesh(Cy(.05,.08,.6,12),M("#3A332C",.7),0,.3,0));o.add(tilt);tilt.add(inner);
+  inner.add(mesh(Cy(1,1,.04,56),M("#163E4B",.3,.1),0,0,0));const ring=new THREE.TorusGeometry(.98,.03,6,80);ring.rotateX(Math.PI/2);inner.add(mesh(ring,M("#6F6860",.8),0,.03,0));
+  const R=rng(5);const cl=[[-.5,-.25,20,.2],[-.28,.3,12,.12],[.02,-.36,14,.11],[.06,.08,18,.15],[.42,-.24,24,.2],[.56,.38,8,.09]];let N=0;cl.forEach(c=>N+=c[2]);
+  const im=new THREE.InstancedMesh(Cy(.032,.032,.035,8),SAND(),N);const d=new THREE.Object3D();let k=0;
+  cl.forEach(([cx,cz,n,sp])=>{for(let i=0;i<n;i++){d.position.set(cx+(R()-.5)*2*sp,.03,cz+(R()-.5)*2*sp);const s=.6+R()*.8;d.scale.set(s,1,s);d.updateMatrix();im.setMatrixAt(k++,d.matrix)}});inner.add(im);
+  return{g:o,h:1.5,spin:inner}},
+ chart(vals,labels,cols,maxV,vl){const g=new THREE.Group();const n=vals.length,bw=.2,gap=.1,tot=n*bw+(n-1)*gap;g.add(mesh(B(tot+.3,.06,.5),M("#2E2720",.7),0,.03,0));
+  vals.forEach((v,i)=>{const h=Math.max(.05,v/maxV*1.9),x0=-tot/2+bw/2+i*(bw+gap);g.add(mesh(B(bw,h,bw*1.3),M(cols[i],.45,.1,cols[i],.18),x0,.06+h/2,0));
+   if(vl){const s=label(vl[i],cols[i],.13);s.position.set(x0,.06+h+.13,0);g.add(s)}const t=label(labels[i],"#B8AFA5",.1);t.position.set(x0,.14,.34);g.add(t)});
+  return{g,h:2.2,spin:false}},
+ crash(){return MODELS.chart([1,.62,.5,.46],["2008","2009","2010","2011"],["#D4AE5E","#E0583A","#E0583A","#E0583A"],1)},
+ chart23(){return MODELS.chart([300,528,634],["2021","2022","2023"],["#2E9476","#2E9476","#3FB48F"],917,["300","528","634"])},
+ chart25(){return MODELS.chart([300,528,634,761,917],["'21","'22","'23","'24","'25"],["#2E9476","#2E9476","#2E9476","#3FB48F","#D4AE5E"],917,["300","528","634","761","917"])},
+ bk(){const g=new THREE.Group();g.add(mesh(Cy(.62,.68,.06,6),M("#3A332C",.8),0,.03,0));let y=.06;const tiers=[.36,.32,.28,.24,.2,.16,.12,.09];
+  tiers.forEach((r,i)=>{const h=.3;const m=towerMat(60+i,3,3,"#C9D3DA",.4);const t=mesh(Cy(r*.9,r,h,6),m,0,y+h/2,0);t.rotation.y=i*.3;g.add(t);y+=h});
+  g.add(mesh(Cy(.004,.035,.85,6),M("#D6DDE2",.25,.5),0,y+.42,0));return{g,h:3.3}},
+ globe(col){const o=new THREE.Group(),inner=new THREE.Group();o.add(mesh(Cy(.05,.14,.55,16),M("#3A332C",.7),0,.27,0));o.add(inner);inner.position.y=1.12;
+  inner.add(mesh(new THREE.SphereGeometry(.46,32,16),M("#1B1713",.6)));inner.add(new THREE.Mesh(new THREE.IcosahedronGeometry(.52,1),new THREE.MeshBasicMaterial({color:col,wireframe:true})));
+  const r=mesh(new THREE.TorusGeometry(.74,.018,8,96),M(col,.3,.5,col,.4));r.rotation.x=Math.PI/2.4;inner.add(r);return{g:o,h:1.9,spin:inner}},
+ globe13(){return MODELS.globe("#5DB08A")},
+ globe21(){return MODELS.globe("#3FB48F")},
+ barrel(){const g=new THREE.Group();const bm=M("#2A2520",.45,.35);g.add(mesh(Cy(.32,.32,.9,32),bm,-.15,.45,0));
+  [.14,.76].forEach(y=>{const t=mesh(new THREE.TorusGeometry(.325,.018,8,40),bm,-.15,y,0);t.rotation.x=Math.PI/2;g.add(t)});
+  g.add(mesh(Cy(.3,.3,.012,32),M("#E0583A",.5),-.15,.905,0));
+  const a=new THREE.Group();const rm=M("#E0583A",.4,.1,"#E0583A",.4);a.add(mesh(B(.08,.5,.08),rm,0,.2,0));const cn=mesh(new THREE.ConeGeometry(.15,.24,20),rm,0,-.14,0);cn.rotation.x=Math.PI;a.add(cn);a.position.set(.48,1.1,0);g.add(a);bobs.push({o:a,y:1.1,a:.08});
+  return{g,h:1.5}},
+ dframe(){const g=new THREE.Group();const gm=GOLD();g.add(mesh(B(1.3,.05,.45),M("#3A332C",.8),0,.025,0));
+  g.add(mesh(B(.22,2.0,.16),gm,-.44,1.05,0));g.add(mesh(B(.22,2.0,.16),gm,.44,1.05,0));g.add(mesh(B(1.1,.22,.18),gm,0,2.14,0));
+  g.add(mesh(B(.66,.08,.12),new THREE.MeshStandardMaterial({color:"#9fd3e6",transparent:true,opacity:.5,roughness:.1}),0,2.14,.0));return{g,h:2.3}},
+ key(){const g=new THREE.Group(),k=new THREE.Group();const gm=GOLD();
+  k.add(mesh(new THREE.TorusGeometry(.2,.055,14,48),gm,-.5,0,0));const sh=mesh(Cy(.042,.042,.9,20),gm,.02,0,0);sh.rotation.z=Math.PI/2;k.add(sh);
+  k.add(mesh(B(.06,.2,.05),gm,.36,-.1,0));k.add(mesh(B(.06,.14,.05),gm,.46,-.07,0));k.add(mesh(new THREE.SphereGeometry(.06,16,12),gm,-.27,0,0));
+  k.rotation.z=.35;k.position.y=.85;g.add(k);bobs.push({o:k,y:.85,a:.06});g.add(mesh(Cy(.25,.3,.04,32),M("#2E2720",.7),0,.02,0));return{g,h:1.4}},
+ plane(){const g=new THREE.Group(),p=new THREE.Group();const wm=M("#E8ECEF",.35,.15);
+  const f=mesh(Cy(.08,.08,1.2,20),wm);f.rotation.z=Math.PI/2;p.add(f);p.add(mesh(new THREE.SphereGeometry(.08,20,12),wm,.6,0,0));
+  const t=mesh(new THREE.ConeGeometry(.08,.3,20),wm,-.75,0,0);t.rotation.z=Math.PI/2;p.add(t);
+  p.add(mesh(B(.34,.02,1.36),wm,.05,-.02,0));p.add(mesh(B(.16,.015,.44),wm,-.72,0,0));p.add(mesh(B(.18,.24,.015),M("#C4381F",.5),-.74,.13,0));
+  p.position.y=.95;p.rotation.z=.12;g.add(p);bobs.push({o:p,y:.95,a:.05});
+  g.add(mesh(Cy(.015,.015,.9,8),M("#555",.5),0,.45,0));g.add(mesh(B(1.7,.02,.3),M("#2A2724",.8),0,.01,0));
+  for(let i=0;i<6;i++)g.add(mesh(B(.14,.022,.03),M("#EDE6D8",.6),-.7+i*.28,.012,0));return{g,h:1.4}},
+ metro(){const g=new THREE.Group();const con=M("#9A948C",.8);
+  g.add(mesh(Cy(.07,.09,.55,12),con,0,.28,0));g.add(mesh(B(1.9,.08,.42),con,0,.59,0));
+  const t=new THREE.Group();t.add(mesh(B(1.4,.28,.28),M("#EEF1F3",.35)));t.add(mesh(B(1.41,.06,.285),M("#2B6CB0",.4),0,-.07,0));
+  t.add(mesh(B(1.2,.08,.29),M("#1c2a36",.2,.1,"#9FD3FF",.35),0,.05,0));const n=mesh(new THREE.SphereGeometry(.14,16,12,0,Math.PI),M("#EEF1F3",.35),.7,0,0);n.rotation.y=Math.PI/2;n.scale.set(1,1,.6);t.add(n);
+  t.position.y=.8;g.add(t);return{g,h:1.2}},
+ coins(){const g=new THREE.Group();const gm=GOLD();const geo=Cy(.13,.13,.04,32);const R=rng(3);
+  [4,7,11,16].forEach((n,s)=>{for(let j=0;j<n;j++)g.add(mesh(geo,gm,-.45+s*.3+(R()-.5)*.02,.02+j*.042,(R()-.5)*.02))});
+  g.add(mesh(B(1.2,.02,.4),M("#2E2720",.7),0,.0,0));return{g,h:1.0}}
+};
+
+// ---------- renderer / scene ----------
+const canvas=$("gl");
+let renderer;
+try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:"high-performance"})}catch(err){$("enter").textContent="WebGL unavailable";$("err").hidden=false;$("err").textContent="This device or browser has WebGL turned off, so the 3D halls cannot be drawn.";return}
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));ANISO=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+const scene=new THREE.Scene();scene.background=new THREE.Color("#0E0C0A");scene.fog=new THREE.Fog("#0E0C0A",16,52);
+const cam=new THREE.PerspectiveCamera(62,1,.05,200);cam.rotation.order="YXZ";
+const pick=[],spinners=[],PED={},LIGHTS=[],PARTS=[];let NEON=null;
+// Layout: a round rotunda (radius RR) at the origin, four wings of two rooms each, one per compass direction.
+const RR=11,HH=9,WG=[];
+const WINGS=[{th:0,rooms:[1,2],t:"Before freehold",y:"1950–2001"},{th:-Math.PI/2,rooms:[3,4],t:"Boom and bust",y:"2002–2011"},{th:Math.PI,rooms:[5,6],t:"Rebound and slide",y:"2012–2020"},{th:Math.PI/2,rooms:[7,8],t:"Migration and records",y:"2021–now"}];
+const wingOf=r=>Math.floor((r-1)/2),kOf=r=>(r-1)%2,z0Of=r=>-(RR+kOf(r)*L);
+function toW(w,lx,lz){if(w<0)return{x:lx,z:lz};const t=WINGS[w].th,c=Math.cos(t),s=Math.sin(t);return{x:lx*c+lz*s,z:-lx*s+lz*c}}
+function toL(w,x,z){const t=WINGS[w].th,c=Math.cos(t),s=Math.sin(t);return{x:x*c-z*s,z:x*s+z*c}}
+function nearestWing(x,z){const d=Math.hypot(x,z)||1;let best=0,bd=-9;for(let w=0;w<4;w++){const v=toW(w,0,-1),dot=(x*v.x+z*v.z)/d;if(dot>bd){bd=dot;best=w}}return best}
+function locate(x,z){if(Math.hypot(x,z)<RR-.1)return{hub:true,room:0,w:-1};const w=nearestWing(x,z),l=toL(w,x,z),s=-l.z,k=s<RR+L?0:1;return{hub:false,w,lx:l.x,lz:l.z,s,k,room:WINGS[w].rooms[k]}}
+
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener("resize",resize);resize();
+
+function buildHalls(){
+ scene.add(new THREE.HemisphereLight("#FFF1DC","#1A140F",.85));
+ const dl=new THREE.DirectionalLight("#FFE8C8",.35);dl.position.set(4,10,6);scene.add(dl);
+ const ceil=M("#15120F",.9);
+ const glowC=document.createElement("canvas");glowC.width=glowC.height=128;{const x=glowC.getContext("2d");const gr=x.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,"rgba(255,236,200,.55)");gr.addColorStop(1,"rgba(255,236,200,0)");x.fillStyle=gr;x.fillRect(0,0,128,128)}
+ buildHalls.glow=new THREE.CanvasTexture(glowC);
+ WINGS.forEach((Wg,w)=>{const g=new THREE.Group();g.rotation.y=Wg.th;scene.add(g);WG[w]=g});
+ for(let r=1;r<NR;r++){
+  const g=WG[wingOf(r)],add=o=>{g.add(o);return o},z0=z0Of(r),zc=z0-L/2,R=ROOMS[r],acc=R.acc;
+  const fl=mesh(new THREE.PlaneGeometry(W,L),new THREE.MeshStandardMaterial({map:floorTex(r),roughness:.38,metalness:.05}),0,0,zc);fl.rotation.x=-Math.PI/2;fl.userData.floor=true;add(fl);pick.push(fl);
+  const run=mesh(new THREE.PlaneGeometry(3.2,L-3),M(mix(acc,"#16130F",.55),.9),0,.006,zc);run.rotation.x=-Math.PI/2;add(run);
+  [-1.66,1.66].forEach(xx=>{const ln=mesh(new THREE.PlaneGeometry(.06,L-3),new THREE.MeshBasicMaterial({color:acc}),xx,.008,zc);ln.rotation.x=-Math.PI/2;add(ln)});
+  const wm=M(R.wall,.92);
+  add(mesh(B(WT,H,L),wm,-W/2,H/2,zc));add(mesh(B(WT,H,L),wm,W/2,H/2,zc));
+  add(mesh(B(.06,.16,L),M("#0F0D0B",.8),-W/2+WT/2+.03,.08,zc));add(mesh(B(.06,.16,L),M("#0F0D0B",.8),W/2-WT/2-.03,.08,zc));
+  // skyline fresco band on both side walls
+  const mt=new THREE.MeshBasicMaterial({map:paintMural(r)});
+  [-1,1].forEach(sd=>{const mp=mesh(new THREE.PlaneGeometry(L,2.06),mt,sd*(W/2-WT/2-.01),5.97,zc);mp.rotation.y=-sd*Math.PI/2;add(mp);
+   add(mesh(B(.05,.06,L),new THREE.MeshBasicMaterial({color:acc}),sd*(W/2-WT/2-.03),4.92,zc))});
+  const sm=new THREE.MeshBasicMaterial({color:mix("#FFFFFF",acc,.55)});
+  add(mesh(B(.16,.04,L-4),sm,-3.2,H-.03,zc));add(mesh(B(.16,.04,L-4),sm,3.2,H-.03,zc));
+  const pl=new THREE.PointLight(mix("#FFE9CC",acc,.55),1.3,30,1.2);pl.position.set(0,6,zc+2.5);add(pl);LIGHTS[r]=pl;
+  const pl2=new THREE.PointLight(acc,.55,16,1.5);pl2.position.set(0,1.2,z0-L+1.2);add(pl2);
+ }
+ WINGS.forEach((Wg,w)=>{const g=WG[w],rs=Wg.rooms;
+  const cm=mesh(new THREE.PlaneGeometry(W,2*L),ceil,0,H,-(RR+L));cm.rotation.x=Math.PI/2;g.add(cm);
+  for(let kk=0;kk<=2;kk++){const z=-(RR+kk*L),cw=M(ROOMS[rs[Math.max(0,kk-1)]].wall,.95);
+   if(kk===2){g.add(mesh(B(W,H,WT),cw,0,H/2,z));continue}
+   const sw=(W-DOOR)/2;g.add(mesh(B(sw,H,WT),cw,-(DOOR/2+sw/2),H/2,z));g.add(mesh(B(sw,H,WT),cw,DOOR/2+sw/2,H/2,z));
+   g.add(mesh(B(DOOR,H-DOOR_H,WT),cw,0,(H+DOOR_H)/2,z));
+   // glowing portal in the colour of the room ahead
+   const acc=ROOMS[rs[kk]].acc,pm=new THREE.MeshBasicMaterial({color:acc});
+   g.add(mesh(B(.12,DOOR_H,WT+.1),pm,-DOOR/2,DOOR_H/2,z));g.add(mesh(B(.12,DOOR_H,WT+.1),pm,DOOR/2,DOOR_H/2,z));g.add(mesh(B(DOOR+.24,.12,WT+.1),pm,0,DOOR_H,z));
+   const th=mesh(new THREE.PlaneGeometry(DOOR*1.9,3),new THREE.MeshBasicMaterial({map:buildHalls.glow,color:acc,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}),0,.014,z);th.rotation.x=-Math.PI/2;g.add(th);
+   if(kk===1)g.add(mesh(new THREE.PlaneGeometry(6.4,1.12),new THREE.MeshBasicMaterial({map:signTex(rs[1])}),0,5.55,z+WT/2+.02));
+  }});
+ buildHub();buildParticles();buildNeon();
+ X.forEach(buildExhibit);
+}
+
+function wingSignTex(w){const Wg=WINGS[w],c=document.createElement("canvas");c.width=1600;c.height=300;const x=c.getContext("2d");const acc=ROOMS[Wg.rooms[0]].acc,acc2=ROOMS[Wg.rooms[1]].acc;
+ x.fillStyle="#14110E";x.fillRect(0,0,1600,300);const g=x.createLinearGradient(0,0,1600,0);g.addColorStop(0,acc);g.addColorStop(1,acc2);x.fillStyle=g;x.fillRect(0,290,1600,10);
+ x.font=F.disp(190);x.fillStyle=acc;x.fillText("ABCD"[w],48,220);const wd=x.measureText("ABCD"[w]).width;
+ x.font=F.disp(100);x.fillStyle="#F4EFE6";x.fillText(Wg.t.toUpperCase(),wd+100,158);
+ x.font=F.mono(36,"600");x.fillStyle="#B8AFA5";x.fillText(`WING ${"ABCD"[w]}   ·   ROOMS ${ROMAN[Wg.rooms[0]]}–${ROMAN[Wg.rooms[1]]}   ·   ${Wg.y}`.toUpperCase(),wd+104,236);
+ return tex(c)}
+function hubFloorTex(){const c=document.createElement("canvas");c.width=c.height=1024;const x=c.getContext("2d"),C=512,sc=512/(RR+.3),rnd=rng(77);
+ const bg=x.createRadialGradient(C,C,0,C,C,C);bg.addColorStop(0,"#2A2119");bg.addColorStop(1,"#17120E");x.fillStyle=bg;x.fillRect(0,0,1024,1024);
+ x.strokeStyle="rgba(255,236,210,.06)";for(let i=0;i<70;i++){x.lineWidth=1+rnd()*2;x.beginPath();let px=rnd()*1024,pz=rnd()*1024;x.moveTo(px,pz);for(let j=0;j<6;j++){px+=(rnd()-.5)*170;pz+=(rnd()-.5)*170;x.lineTo(px,pz)}x.stroke()}
+ WINGS.forEach((Wg,w)=>{const d=toW(w,0,-1),a=Math.atan2(d.z,d.x),acc=ROOMS[Wg.rooms[0]].acc;
+  x.save();x.translate(C,C);x.rotate(a);x.fillStyle=hexA(acc,.28);x.fillRect(3.2*sc,-1.6*sc,(RR-3.2)*sc,3.2*sc);x.fillStyle=acc;x.fillRect(3.2*sc,-1.66*sc,(RR-3.2)*sc,5);x.fillRect(3.2*sc,1.6*sc,(RR-3.2)*sc,5);
+  x.beginPath();x.moveTo((RR-2.6)*sc,-.9*sc);x.lineTo((RR-1.4)*sc,0);x.lineTo((RR-2.6)*sc,.9*sc);x.closePath();x.fill();x.restore();
+  x.strokeStyle=acc;x.lineWidth=16;x.beginPath();x.arc(C,C,(RR-.7)*sc,a-.62,a+.62);x.stroke()});
+ x.strokeStyle="#C29A4E";[[2.9,6],[3.25,3],[RR-1.15,3]].forEach(([r,lw])=>{x.lineWidth=lw;x.beginPath();x.arc(C,C,r*sc,0,7);x.stroke()});
+ x.fillStyle="rgba(212,174,94,.22)";x.strokeStyle="#D4AE5E";x.lineWidth=3;x.beginPath();for(let i=0;i<16;i++){const a=i*Math.PI/8,r=(i%2?3.4:4.6)*sc;x.lineTo(C+Math.cos(a)*r,C+Math.sin(a)*r)}x.closePath();x.fill();x.stroke();
+ return tex(c)}
+function buildHub(){
+ const R=ROOMS[0];
+ const fl=mesh(new THREE.CircleGeometry(RR+.3,96),new THREE.MeshStandardMaterial({map:hubFloorTex(),roughness:.32,metalness:.05}));fl.rotation.x=-Math.PI/2;fl.userData.floor=true;scene.add(fl);pick.push(fl);
+ const wm=M(R.wall,.92);wm.side=THREE.DoubleSide;const al=Math.asin((DOOR/2+.12)/RR),q=Math.PI/2;
+ for(let i=0;i<4;i++){const t0=i*q;
+  const seg=mesh(new THREE.CylinderGeometry(RR,RR,HH,40,1,true,t0+al,q-2*al),wm,0,HH/2,0);scene.add(seg);
+  const lin=mesh(new THREE.CylinderGeometry(RR,RR,HH-DOOR_H,8,1,true,t0-al,2*al),wm,0,(HH+DOOR_H)/2,0);scene.add(lin)}
+ const mt=paintMural(0);mt.wrapS=THREE.RepeatWrapping;mt.repeat.x=2;
+ scene.add(mesh(new THREE.CylinderGeometry(RR-.06,RR-.06,2.06,120,1,true),new THREE.MeshBasicMaterial({map:mt,side:THREE.BackSide}),0,HH-1.05,0));
+ const brass=new THREE.MeshBasicMaterial({color:"#C29A4E"});
+ const tr=mesh(new THREE.TorusGeometry(RR-.08,.04,6,120),brass,0,HH-2.12,0);tr.rotation.x=Math.PI/2;scene.add(tr);
+ const cl=mesh(new THREE.CircleGeometry(RR+.3,64),M("#15120F",.9),0,HH,0);cl.rotation.x=Math.PI/2;scene.add(cl);
+ const oc=mesh(new THREE.CircleGeometry(2.6,48),new THREE.MeshBasicMaterial({color:"#FFE7B8"}),0,HH-.02,0);oc.rotation.x=Math.PI/2;scene.add(oc);
+ const ring=mesh(new THREE.TorusGeometry(5.2,.06,8,96),brass,0,HH-.05,0);ring.rotation.x=Math.PI/2;scene.add(ring);
+ for(let i=0;i<8;i++){const b=mesh(B(.1,.06,RR-3),brass,0,HH-.05,0);b.rotation.y=i*Math.PI/4;b.translateZ((RR+2.6)/2);scene.add(b)}
+ const cp=new THREE.PointLight("#FFE3B8",1.25,34,1.1);cp.position.set(0,HH-1,0);scene.add(cp);LIGHTS[0]=cp;
+ WINGS.forEach((Wg,w)=>{const acc=ROOMS[Wg.rooms[0]].acc,p=toW(w,0,-(RR-.42)),s=mesh(new THREE.PlaneGeometry(5.3,1),new THREE.MeshBasicMaterial({map:wingSignTex(w)}),p.x,5.55,p.z);s.rotation.y=Wg.th;scene.add(s);
+  const lp=toW(w,0,-(RR-2.4)),l=new THREE.PointLight(acc,.9,13,1.4);l.position.set(lp.x,3,lp.z);scene.add(l)});
+ // centrepiece: the skyline on a turntable
+ scene.add(mesh(Cy(2.15,2.35,.9,64),M("#2A2119",.6),0,.45,0));
+ const cap=mesh(new THREE.TorusGeometry(2.15,.06,8,80),M("#D4AE5E",.3,.6,"#5a4214",.5),0,.9,0);cap.rotation.x=Math.PI/2;scene.add(cap);
+ const sky=new THREE.Group();sky.position.y=.9;scene.add(sky);spinners.push(sky);
+ sky.add(mesh(Cy(2.05,2.05,.05,64),M("#1B5566",.25,.1),0,.03,0));
+ const bk=MODELS.bk();bk.g.scale.setScalar(1.55);sky.add(bk.g);
+ const rnd=rng(9);for(let i=0;i<22;i++){const a=i/22*TAU+rnd()*.2,rr=.95+rnd()*.85,h=.5+rnd()*(1.9-rr*.6),w=.14+rnd()*.12;
+  const m=i%5===0?M("#D4AE5E",.3,.5,"#5a4214",.5):towerMat(200+i,1,Math.max(2,Math.round(h*6)),"#D6DEE3",.55);sky.add(mesh(i%3===0?Cy(w*.6,w*.6,h,14):B(w,h,w),m,Math.cos(a)*rr,.05+h/2,Math.sin(a)*rr))}
+ const glow=mesh(new THREE.PlaneGeometry(9,9),new THREE.MeshBasicMaterial({map:buildHalls.glow,color:"#FFD89A",transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}),0,.013,0);glow.rotation.x=-Math.PI/2;scene.add(glow);
+ // title panels flanking wing A
+ [["title",-1],["info",1]].forEach(([k,sx])=>{const u={x:sx*Math.SQRT1_2,z:-Math.SQRT1_2},p={x:u.x*(RR-.55),z:u.z*(RR-.55)},ry=Math.atan2(-u.x,-u.z);
+  const b=mesh(B(5.2,3.4,.06),M("#96712F",.4,.5),p.x+u.x*.04,3.1,p.z+u.z*.04);b.rotation.y=ry;scene.add(b);
+  const pl=mesh(new THREE.PlaneGeometry(5,3.2),new THREE.MeshBasicMaterial({map:panelTex(k)}),p.x,3.1,p.z);pl.rotation.y=ry;pl.translateZ(.01);scene.add(pl)});
+}
+
+function slot(r,s){
+ if(r===0){const u={x:(s==="LW"?-1:1)*Math.SQRT1_2,z:Math.SQRT1_2};return{kind:"wall",P:{x:u.x*(RR-.38),z:u.z*(RR-.38)},n:{x:-u.x,z:-u.z}}}
+ const z0=z0Of(r);
+ if(s==="E")return{kind:"center",P:{x:0,z:z0-.5*L},n:{x:0,z:1}};
+ if(s==="END")return{kind:"wall",P:{x:0,z:z0-L+WT/2},n:{x:0,z:1}};
+ const S={A:[-1,.28],C:[1,.28],B:[-1,.72],D:[1,.72]}[s];
+ return{kind:"wall",P:{x:S[0]*(W/2-WT/2),z:z0-S[1]*L},n:{x:-S[0],z:0}}}
+
+const lampMat=new THREE.MeshBasicMaterial({color:"#FFE3B0"});
+const RMAT=ROOMS.map(R=>({frame:M(mix(R.acc,"#2a1f12",.45),.45,.45),ped:M(mix(R.acc,"#1a1612",.8),.75),cap:M(R.acc,.35,.3,R.acc,.35)}));
+function buildExhibit(e,i){
+ const s=e._s=slot(e.r,e.slot),rotY=Math.atan2(s.n.x,s.n.z),g=new THREE.Group();e._w=e.r?wingOf(e.r):-1;(e._w<0?scene:WG[e._w]).add(g);
+ const frameMat=RMAT[e.r].frame,pedMat=RMAT[e.r].ped,capMat=RMAT[e.r].cap;
+ const at=(o,d,y,base)=>{const b=base||s.P;o.position.set(b.x+s.n.x*d,y,b.z+s.n.z*d);o.rotation.y=rotY;g.add(o);return o};
+ const glow=(p,rad)=>{const gm=mesh(new THREE.PlaneGeometry(rad,rad),new THREE.MeshBasicMaterial({map:buildHalls.glow,color:mix("#FFFFFF",ROOMS[e.r].acc,.5),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}),p.x,.012,p.z);gm.rotation.x=-Math.PI/2;g.add(gm);e._glow=gm;e._A=toW(e._w,p.x,p.z)};
+ if(!e.m){
+  at(mesh(B(FW+.2,FH+.2,.06),frameMat),.03,2.55);
+  at(mesh(new THREE.PlaneGeometry(FW,FH),new THREE.MeshBasicMaterial({map:e.kind==="builders"?buildersTex(e):frameTex(e)})),.07,2.55);
+  at(mesh(B(1.5,.05,.16),lampMat),.14,2.55+FH/2+.32);
+  glow({x:s.P.x+s.n.x*1.3,z:s.P.z+s.n.z*1.3},3.2);
+  e._look={d:0,y:2.5};
+ }else{
+  const center=s.kind==="center";const Q=center?{x:s.P.x,z:s.P.z}:{x:s.P.x+s.n.x*1.6,z:s.P.z+s.n.z*1.6};e._Q=Q;
+  const pw=center?1.3:1.0;g.add(mesh(B(pw,1,pw),pedMat,Q.x,.5,Q.z));g.add(mesh(B(pw+.06,.04,pw+.06),capMat,Q.x,1.0,Q.z));
+  const md=MODELS[e.m]();md.g.position.set(Q.x,1.02,Q.z);md.g.rotation.y=rotY;g.add(md.g);e._h=md.h;
+  if(md.spin!==false&&!RM)spinners.push(md.spin||md.g);
+  const pt=plaqueTex(e);
+  if(!center){at(mesh(B(2.3,1.22,.05),frameMat),.03,3.95);at(mesh(new THREE.PlaneGeometry(2.2,1.12),new THREE.MeshBasicMaterial({map:pt})),.065,3.95);at(mesh(B(1.1,.05,.14),lampMat),.14,4.78)}
+  else{const rt={x:s.n.z,z:-s.n.x};const lp={x:Q.x+s.n.x*1.25+rt.x*1.05,z:Q.z+s.n.z*1.25+rt.z*1.05};
+   g.add(mesh(Cy(.03,.03,.95,8),frameMat,lp.x,.47,lp.z));const lt=mesh(new THREE.PlaneGeometry(1.3,.66),new THREE.MeshBasicMaterial({map:pt}),lp.x,1.0,lp.z);lt.rotation.order="YXZ";lt.rotation.y=rotY;lt.rotation.x=-.8;g.add(lt);
+   const bk=mesh(B(1.36,.72,.03),frameMat,lp.x,1.0,lp.z);bk.rotation.order="YXZ";bk.rotation.y=rotY;bk.rotation.x=-.8;bk.translateZ(-.02);g.add(bk)}
+  glow(Q,center?3.6:2.8);(PED[e.r]=PED[e.r]||[]).push({x:Q.x,z:Q.z,r:center?1.2:.95});
+ }
+ g.traverse(o=>{if(o.isMesh){o.userData.ex=i;pick.push(o)}});
+}
+
+function buildParticles(){const dot=dotTex();
+ ROOMS.forEach((R,r)=>{const n=R.p.m==="spark"?260:200,pos=new Float32Array(n*3),ph=new Float32Array(n),rnd=rng(500+r);
+  const z0=r?z0Of(r):0;
+  for(let i=0;i<n;i++){if(r){pos[i*3]=(rnd()-.5)*(W-1.4);pos[i*3+2]=z0-.6-rnd()*(L-1.2)}else{const a=rnd()*TAU,rr=3+rnd()*(RR-4);pos[i*3]=Math.cos(a)*rr;pos[i*3+2]=Math.sin(a)*rr}
+   pos[i*3+1]=.2+rnd()*((r?H:HH)-.4);ph[i]=rnd()*TAU}
+  const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({color:R.p.c,size:R.p.m==="bubble"?.16:.1,map:dot,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9});
+  const pts=new THREE.Points(geo,mat);pts.frustumCulled=false;(r?WG[wingOf(r)]:scene).add(pts);PARTS.push({pts,pos,ph,n,m:R.p.m,r,z0})})}
+function updParticles(dt,t){
+ for(const P of PARTS){if(P.r!==st.room&&!(P.r&&st.room&&wingOf(P.r)===wingOf(st.room))&&!(P.r===0||st.room===0))continue;const a=P.pos,zt=P.z0-.5,zb=P.z0-L+.5;
+  for(let i=0;i<P.n;i++){const k=i*3,ph=P.ph[i];
+   switch(P.m){
+    case"rise":case"bubble":a[k+1]+=dt*(P.m==="bubble"?.22:.35+.2*Math.sin(ph));a[k]+=Math.sin(t*.8+ph)*dt*.15;if(a[k+1]>H-.1)a[k+1]=.1;break;
+    case"fall":a[k+1]-=dt*(.35+.15*Math.sin(ph));a[k]+=Math.sin(t+ph)*dt*.2;if(a[k+1]<.05)a[k+1]=H-.1;break;
+    case"snow":a[k+1]-=dt*.16;a[k]+=Math.sin(t*.5+ph)*dt*.25;if(a[k+1]<.05)a[k+1]=H-.1;break;
+    case"sand":a[k]+=dt*(.5+.3*Math.sin(ph));a[k+1]+=Math.sin(t*1.3+ph)*dt*.1;if(a[k]>W/2-.7)a[k]=-W/2+.7;break;
+    case"drift":a[k+2]+=dt*.35*Math.sin(ph);a[k+1]+=Math.cos(t*.6+ph)*dt*.12;if(a[k+2]>zt)a[k+2]=zb;if(a[k+2]<zb)a[k+2]=zt;break;
+    case"spark":a[k+1]+=dt*.12;if(a[k+1]>H-.1)a[k+1]=.1;break;
+    default:a[k+1]+=Math.sin(t*.7+ph)*dt*.08;a[k]+=Math.cos(t*.5+ph)*dt*.08}}
+  if(P.m==="spark")P.pts.material.opacity=.6+.4*Math.sin(t*3);
+  P.pts.geometry.attributes.position.needsUpdate=true}}
+const NX=W/2-WT/2-.14,py=v=>5.12+(v-1)*.98;
+function buildNeon(){
+ const mk=(c,o)=>new THREE.MeshBasicMaterial(o?{color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false}:{color:c});
+ const up=mk("#3FE0A8"),dn=mk("#FF5A3C"),gu=mk("#3FE0A8",.22),gd=mk("#FF5A3C",.22);
+ for(let i=1;i<PRICE.length;i++){const u=PRICE[i][1]>=PRICE[i-1][1];let pieces=[[PRICE[i-1],PRICE[i]]];
+  // a wing ends at rooms 5 and 7, so split the line where it jumps to the next wing
+  [5,7].forEach(q=>{pieces=pieces.flatMap(([a,b])=>{if(a[0]<q&&b[0]>q){const vq=a[1]+(b[1]-a[1])*(q-a[0])/(b[0]-a[0]);return[[a,[q-1e-4,vq]],[[q,vq],b]]}return[[a,b]]})});
+  pieces.forEach(([a,b])=>{const A=pLoc(a[0]),Bq=pLoc(b[0]),g=WG[A.w];const va=new THREE.Vector3(NX,py(a[1]),A.z),vb=new THREE.Vector3(NX,py(b[1]),Bq.z),cur=new THREE.LineCurve3(va,vb);
+   g.add(new THREE.Mesh(new THREE.TubeGeometry(cur,1,.032,8,false),u?up:dn));g.add(new THREE.Mesh(new THREE.TubeGeometry(cur,1,.1,8,false),u?gu:gd));
+   g.add(mesh(new THREE.SphereGeometry(.05,10,8),u?up:dn,vb.x,vb.y,vb.z))})}
+ PRICE.forEach(p=>{if(!p[2])return;const A=pLoc(p[0]),s=label(p[2].toUpperCase(),"#F4EFE6",.17);s.position.set(NX-.12,py(p[1])+.24,A.z);WG[A.w].add(s)});
+ const h=label("PRICE CYCLE · ILLUSTRATIVE","#FFD27A",.15);h.position.set(NX-.12,6.78,-RR-2.4);WG[1].add(h);
+ const m=new THREE.Group();m.add(new THREE.Mesh(new THREE.SphereGeometry(.12,20,14),new THREE.MeshBasicMaterial({color:"#FFFFFF"})));
+ m.add(mesh(new THREE.SphereGeometry(.3,20,14),new THREE.MeshBasicMaterial({color:"#FFFFFF",transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false})));
+ const yl=label("YOU ARE HERE","#FFFFFF",.13);yl.position.y=-.32;m.add(yl);m.visible=false;scene.add(m);NEON=m}
+function pLoc(p){const w=wingOf(Math.min(8,Math.floor(p+1e-9)));return{w,z:-(RR+(p-WINGS[w].rooms[0])*L)}}
+function updNeon(){const q=locate(st.x,st.z);if(q.hub){NEON.visible=false;return}const p=WINGS[q.w].rooms[0]+(q.s-RR)/L;
+ if(p<PRICE[0][0]||p>PRICE[PRICE.length-1][0]){NEON.visible=false;return}
+ let i=1;while(i<PRICE.length-1&&PRICE[i][0]<p)i++;const a=PRICE[i-1],b=PRICE[i],f=(p-a[0])/(b[0]-a[0]),wp=toW(q.w,NX-.06,q.lz);
+ NEON.visible=true;NEON.position.set(wp.x,py(a[1]+(b[1]-a[1])*f),wp.z)}
+
+// ---------- camera / navigation ----------
+const st={x:0,z:8.2,yaw:0,pitch:.06,anim:null,idx:-1,keys:{},room:-1,intro:true};
+const TAU=Math.PI*2;
+function angles(fx,fy,fz,tx,ty,tz){const dx=tx-fx,dy=ty-fy,dz=tz-fz;return{yaw:Math.atan2(-dx,-dz),pitch:Math.atan2(dy,Math.hypot(dx,dz))}}
+function viewFor(e){
+ const s=e._s,tanH=Math.tan(THREE.MathUtils.degToRad(cam.fov/2))*cam.aspect;let px,pz,tx,ty,tz;
+ if(!e.m){const d=Math.min(13,Math.max(3.9,(FW/2+.35)/tanH));px=s.P.x+s.n.x*d;pz=s.P.z+s.n.z*d;tx=s.P.x;tz=s.P.z;ty=2.45}
+ else if(s.kind==="center"){const d=Math.max(4.6,1.5/tanH+.4);px=e._Q.x+s.n.x*d;pz=e._Q.z+s.n.z*d;tx=e._Q.x;tz=e._Q.z;ty=1+e._h*.5}
+ else{const d=Math.min(13,Math.max(5.6,1.6+1.45/tanH));px=s.P.x+s.n.x*d;pz=s.P.z+s.n.z*d;tx=s.P.x+s.n.x*.9;tz=s.P.z+s.n.z*.9;ty=2.75}
+ if(e._w>=0)px=Math.max(-W/2+.8,Math.min(W/2-.8,px));
+ const a=angles(px,EYE,pz,tx,ty,tz);const off=innerWidth>900?.12:0,wp=toW(e._w,px,pz);
+ return{x:wp.x,z:wp.z,yaw:a.yaw+off+(e._w>=0?WINGS[e._w].th:0),pitch:a.pitch}}
+const angDiff=(a,b)=>((a-b+Math.PI)%TAU+TAU)%TAU-Math.PI;
+function blocked(x,z){const d=Math.hypot(x,z);
+ if(d<RR-.6)return d<2.8;
+ const w=nearestWing(x,z),l=toL(w,x,z),s=-l.z,ax=Math.abs(l.x);
+ if(ax>W/2-.6||s>RR+2*L-.6)return true;
+ if(s<RR+.6&&ax>DOOR/2-.35)return true;
+ if(Math.abs(s-(RR+L))<.55&&ax>DOOR/2-.35)return true;
+ for(const p of PED[WINGS[w].rooms[s<RR+L?0:1]]||[])if(Math.hypot(l.x-p.x,l.z-p.z)<p.r)return true;
+ return false}
+const axisPt=(w,s)=>toW(w,0,-s);
+function segDist(p,q){const dx=q.x-p.x,dz=q.z-p.z,l2=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,-(p.x*dx+p.z*dz)/l2));return Math.hypot(p.x+dx*t,p.z+dz*t)}
+function route(a,b){const A=locate(a.x,a.z),Bq=locate(b.x,b.z),pts=[{x:a.x,z:a.z}];
+ if(!A.hub&&!Bq.hub&&A.w===Bq.w){if(A.k!==Bq.k)(A.k<Bq.k?[RR+L-1.5,RR+L+1.5]:[RR+L+1.5,RR+L-1.5]).forEach(s=>pts.push(axisPt(A.w,s)))}
+ else{
+  if(!A.hub){if(A.k===1)pts.push(axisPt(A.w,RR+L+1.5),axisPt(A.w,RR+L-1.5));pts.push(axisPt(A.w,RR+1.6),axisPt(A.w,RR-1.8))}
+  const hin=pts[pts.length-1],hout=Bq.hub?{x:b.x,z:b.z}:axisPt(Bq.w,RR-1.8);
+  // walk around the centrepiece instead of through it
+  if(segDist(hin,hout)<3.4){let mx=hin.x+hout.x,mz=hin.z+hout.z,ml=Math.hypot(mx,mz);if(ml<.5){mx=-hin.z;mz=hin.x;ml=Math.hypot(mx,mz)||1}pts.push({x:mx/ml*6.3,z:mz/ml*6.3})}
+  if(!Bq.hub){pts.push(axisPt(Bq.w,RR-1.8),axisPt(Bq.w,RR+1.6));if(Bq.k===1)pts.push(axisPt(Bq.w,RR+L-1.5),axisPt(Bq.w,RR+L+1.5))}
+ }
+ pts.push({x:b.x,z:b.z});
+ // step around centre pedestals that sit on a wing's axis
+ const cps=[];for(const r in PED)for(const p of PED[r])if(p.r>1)cps.push(toW(wingOf(+r),p.x,p.z));
+ for(let i=1,guard=0;i<pts.length&&guard<12;i++){const p=pts[i-1],q=pts[i];
+  for(const c of cps){const d=segDist({x:p.x-c.x,z:p.z-c.z},{x:q.x-c.x,z:q.z-c.z});if(d<1.7){const dx=q.x-p.x,dz=q.z-p.z,l=Math.hypot(dx,dz)||1;let nx=-dz/l,nz=dx/l;
+   const mx=(p.x+q.x)/2-c.x,mz=(p.z+q.z)/2-c.z;if(mx*nx+mz*nz<0){nx=-nx;nz=-nz}pts.splice(i,0,{x:c.x+nx*2.8,z:c.z+nz*2.8});guard++;i--;break}}}
+ return pts}
+function pathTo(v,dur){
+ const pts=route(st,v);let len=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z);seg.push(d);len+=d}
+ const n=pts.length,last=Math.atan2(-(pts[n-1].x-pts[n-2].x),-(pts[n-1].z-pts[n-2].z));const fy=v.yaw==null?last:v.yaw;
+ st.anim={t:0,dur:RM?.01:(dur||Math.min(4.6,Math.max(.9,.6+len/10))),pts,seg,len,fy:st.yaw,ty:st.yaw+angDiff(fy,st.yaw),fp:st.pitch,tp:v.pitch,walk:n>2};return len}
+const fadeEl=$("fade");
+function fadeJump(v){st.anim=null;fadeEl.style.opacity=1;setTimeout(()=>{st.x=v.x;st.z=v.z;st.yaw=v.yaw;st.pitch=v.pitch;fadeEl.style.opacity=0},RM?10:300)}
+function go(i){
+ i=((i%X.length)+X.length)%X.length;st.idx=i;const e=X[i],v=viewFor(e);
+ if(pathTo(v)>75)fadeJump(v);
+ showPlaque(i);markSeen(i);chime(520+e.r*45,1.6,.045)}
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+
+// ---------- HUD ----------
+const plaque=$("plaque");
+function showPlaque(i){const e=X[i],acc=ROOMS[e.r].acc;plaque.hidden=false;plaque.style.setProperty("--acc",acc);
+ $("plYear").textContent=e.y+" · "+roomLabel(e.r);$("plCount").textContent=(i+1)+" / "+X.length;$("plTitle").textContent=e.t;
+ $("plStat").textContent=e.s;$("plStat").style.color=statCol[e.c]||acc;$("plStatL").textContent=e.sl;$("plBody").textContent=e.b;
+ const le=$("plLesson");le.hidden=!e.l;le.textContent=e.l||"";plaque.scrollTop=0}
+$("plToggle").addEventListener("click",()=>{const o=plaque.classList.toggle("open");$("plToggle").textContent=o?"Hide the plaque":"Read the plaque";$("plToggle").setAttribute("aria-expanded",o)});
+function setRoom(r){if(r===st.room)return;st.room=r;const R=ROOMS[r];document.documentElement.style.setProperty("--acc",R.acc);
+ $("rtNum").textContent=r?(`WING ${"ABCD"[wingOf(r)]} · ROOM ${ROMAN[r]} · ${R.y}`).toUpperCase():"THE ROTUNDA";$("rtName").textContent=r?R.t:"Dubai Property Museum";
+ [...chips.children].forEach((c,k)=>c.setAttribute("aria-current",k===r?"true":"false"));
+ const a=chips.children[r];if(a&&chips.scrollWidth>chips.clientWidth)chips.scrollTo({left:a.offsetLeft-chips.clientWidth/2+a.offsetWidth/2,behavior:RM?"auto":"smooth"});
+ setChord(r);maybePrompt()}
+$("prev").addEventListener("click",()=>go(st.idx<0?0:st.idx-1));
+$("next").addEventListener("click",()=>go(st.idx+1));
+$("helpBtn").addEventListener("click",()=>{const h=$("help");h.hidden=!h.hidden;$("helpBtn").setAttribute("aria-expanded",!h.hidden)});
+let toastT;function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,500)},4200)}
+function enter(i,game){if(!ready)return;$("intro").hidden=true;st.intro=false;$("bar").hidden=false;$("miniWrap").hidden=false;$("soundBtn").hidden=false;
+ if(game)gameStart();else updPill();go(i||0);
+ toast(game?"Your first call waits in Room III. Walk on: → for the next exhibit":matchMedia("(pointer:coarse)").matches?"Drag to look · tap the floor to walk · → for the next exhibit":"← → exhibits · drag to look · W A S D to walk")}
+$("enter").addEventListener("click",()=>enter(0,true));
+$("walk").addEventListener("click",()=>enter(0,false));
+
+// ---------- progress, stamps, minimap ----------
+let seen=new Set();try{const s=JSON.parse(localStorage.getItem("dpm-seen")||"[]");if(Array.isArray(s))s.forEach(v=>{if(Number.isInteger(v)&&v>=0&&v<X.length)seen.add(v)})}catch(_){}
+const roomDone=r=>X.every((e,i)=>e.r!==r||seen.has(i));
+function updSeen(){let rd=0;for(let r=1;r<NR;r++)if(roomDone(r))rd++;$("seen").innerHTML=`Seen <b>${seen.size}</b> / ${X.length} · rooms <b>${rd}</b> / 8`;
+ [...chips.children].forEach((c,k)=>c.classList.toggle("done",roomDone(k)))}
+function markSeen(i){if(seen.has(i))return;const r=X[i].r,was=roomDone(r);seen.add(i);try{localStorage.setItem("dpm-seen",JSON.stringify([...seen]))}catch(_){}
+ updSeen();if(!was&&roomDone(r)&&r>0){setTimeout(()=>{toast(`Room ${ROMAN[r]} stamped ✓ · ${ROOMS[r].t}`);[0,1,2].forEach(k=>setTimeout(()=>chime(660*Math.pow(1.26,k),1,.05),k*110))},900)}}
+updSeen();
+const mini=$("mini"),mctx=mini.getContext("2d");let mDpr=1;
+function sizeMini(){mDpr=Math.min(2,devicePixelRatio||1);mini.width=mini.clientWidth*mDpr;mini.height=mini.clientHeight*mDpr}
+addEventListener("resize",sizeMini);
+function drawMini(){const w=mini.clientWidth,h=mini.clientHeight;if(!w)return;if(mini.width!==Math.round(w*mDpr))sizeMini();
+ mctx.setTransform(mDpr,0,0,mDpr,0,0);mctx.clearRect(0,0,w,h);const k=Math.min(w,h)/2/MAPE,m=(x,z)=>[w/2+x*k,h/2+z*k];
+ for(let r=1;r<NR;r++){const wg=wingOf(r),z0=z0Of(r);mctx.fillStyle=hexA(ROOMS[r].acc,r===st.room?.6:.22);mctx.beginPath();
+  [[-W/2,z0],[W/2,z0],[W/2,z0-L],[-W/2,z0-L]].forEach(([a,b],j)=>{const p=toW(wg,a,b),q=m(p.x,p.z);j?mctx.lineTo(q[0],q[1]):mctx.moveTo(q[0],q[1])});mctx.closePath();mctx.fill();mctx.strokeStyle="rgba(14,12,10,.9)";mctx.lineWidth=1;mctx.stroke()}
+ mctx.fillStyle=hexA(ROOMS[0].acc,st.room===0?.6:.25);mctx.beginPath();mctx.arc(w/2,h/2,RR*k,0,7);mctx.fill();
+ X.forEach((e,i)=>{if(!e._A)return;const q=m(e._A.x,e._A.z);mctx.beginPath();mctx.arc(q[0],q[1],i===st.idx?2.4:1.6,0,7);if(seen.has(i)){mctx.fillStyle="#F4EFE6";mctx.fill()}else{mctx.strokeStyle="#B8AFA5";mctx.lineWidth=1;mctx.stroke()}});
+ const P=m(st.x,st.z);mctx.strokeStyle="#FFFFFF";mctx.lineWidth=1.5;mctx.beginPath();mctx.moveTo(P[0],P[1]);mctx.lineTo(P[0]-Math.sin(st.yaw)*8,P[1]-Math.cos(st.yaw)*8);mctx.stroke();
+ mctx.fillStyle="#FFFFFF";mctx.beginPath();mctx.arc(P[0],P[1],3,0,7);mctx.fill()}
+const MAPE=RR+2*L+1;
+mini.addEventListener("click",ev=>{if(G.modal)return;const rc=mini.getBoundingClientRect(),k=Math.min(rc.width,rc.height)/2/MAPE;
+ const x=(ev.clientX-rc.left-rc.width/2)/k,z=(ev.clientY-rc.top-rc.height/2)/k,q=locate(x,z);if(!q.hub&&(Math.abs(q.lx)>W/2||q.s>RR+2*L))return;go(firstIdx[q.room])});
+
+// ---------- sound ----------
+// Oud melody in maqam Hijaz on D, darbuka in the maqsoum rhythm, a low D–A drone, all through a small hall reverb.
+const SND={ctx:null,on:false,out:null,master:null,timer:null,next:0,step:0,perc:1,noise:null};
+const HZ={"-2":233.08,"-1":261.63,0:293.66,1:311.13,2:369.99,3:392,4:440,5:466.16,6:523.25,7:587.33};
+const MEL=(()=>{const P=[
+ [[4,4],[5,2],[4,2],[3,2],[2,2],[1,4],[2,2],[3,2],[4,8],[null,4]],
+ [[7,4],[6,2],[5,2],[4,4],[3,2],[2,2],[1,2],[2,2],[0,8],[null,4]],
+ [[0,2],[1,2],[2,2],[3,2],[4,4],[5,2],[4,2],[3,4],[2,2],[1,2],[2,8]],
+ [[4,2],[5,2],[4,2],[3,2],[2,4],[1,2],[2,2],[1,4],[0,12]]];
+ const m=[];let s=0;P.forEach(ph=>ph.forEach(([d,n])=>{m[s]={d,n};s+=n}));m.len=s;return m})();
+function pluck(f,t,dur,v){const c=SND.ctx,o1=c.createOscillator(),o2=c.createOscillator(),fl=c.createBiquadFilter(),g=c.createGain(),g2=c.createGain();
+ o1.type="sawtooth";o2.type="triangle";o1.frequency.value=f;o2.frequency.value=f*2.003;g2.gain.value=.35;
+ fl.type="lowpass";fl.Q.value=3;fl.frequency.setValueAtTime(Math.min(9000,f*9),t);fl.frequency.exponentialRampToValueAtTime(f*1.5,t+.28);
+ const len=Math.min(2,.3+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+len);
+ o1.connect(fl);o2.connect(g2);g2.connect(fl);fl.connect(g);g.connect(SND.out);o1.start(t);o2.start(t);o1.stop(t+len+.05);o2.stop(t+len+.05)}
+function drum(k,t,v){const c=SND.ctx,g=c.createGain();g.connect(SND.out);
+ if(k==="D"){const o=c.createOscillator();o.type="sine";o.frequency.setValueAtTime(125,t);o.frequency.exponentialRampToValueAtTime(52,t+.2);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.38);o.connect(g);o.start(t);o.stop(t+.42)}
+ else{const s=c.createBufferSource(),f=c.createBiquadFilter();s.buffer=SND.noise;f.type="bandpass";f.frequency.value=k==="T"?3300:2300;f.Q.value=1.3;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+(k==="T"?.08:.045));s.connect(f);f.connect(g);s.start(t);s.stop(t+.12)}}
+function tick(){const c=SND.ctx,spb=60/94/4;
+ while(SND.next<c.currentTime+.18){const s=SND.step%MEL.len,t=SND.next,m=MEL[s];
+  if(m&&m.d!==null){pluck(HZ[m.d],t,m.n*spb,.15);if(m.n>=8)for(let j=1;j<m.n-1;j++)pluck(HZ[m.d],t+j*spb,spb,.055)}
+  const r=s%16,P=SND.perc;if(P>0){if(r===0||r===8)drum("D",t,.6*P);else if(r===2||r===6||r===12)drum("T",t,.2*P);else if(r===4||r===10||r===14)drum("K",t,.07*P)}
+  SND.step++;SND.next+=spb}}
+function soundInit(){const AC=window.AudioContext||window.webkitAudioContext,c=SND.ctx=new AC();
+ SND.master=c.createGain();SND.master.gain.value=0;SND.master.connect(c.destination);SND.out=c.createGain();SND.out.connect(SND.master);
+ const rv=c.createConvolver(),ir=c.createBuffer(2,c.sampleRate*2.2,c.sampleRate);for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)}
+ rv.buffer=ir;const wet=c.createGain();wet.gain.value=.28;SND.out.connect(rv);rv.connect(wet);wet.connect(SND.master);
+ const nb=c.createBuffer(1,c.sampleRate*.2,c.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;SND.noise=nb;
+ const dl=c.createBiquadFilter();dl.type="lowpass";dl.frequency.value=380;const dg=c.createGain();dg.gain.value=.05;dl.connect(dg);dg.connect(SND.master);
+ [[73.42,"sawtooth"],[110,"sine"],[146.83,"sine"]].forEach(([f,ty])=>{const o=c.createOscillator();o.type=ty;o.frequency.value=f;o.connect(dl);o.start()})}
+function soundToggle(){
+ if(!SND.ctx){try{soundInit()}catch(_){toast("Sound is not available in this browser");return}}
+ SND.on=!SND.on;const c=SND.ctx;if(c.state==="suspended")c.resume();SND.master.gain.setTargetAtTime(SND.on?.55:0,c.currentTime,.4);
+ clearInterval(SND.timer);if(SND.on){SND.next=c.currentTime+.08;setChord(st.room);SND.timer=setInterval(tick,40)}
+ const b=$("soundBtn");b.setAttribute("aria-pressed",SND.on);b.textContent=SND.on?"♪ Music on":"♪ Music off"}
+// the drum drops out in the crash and softens in the long slide
+function setChord(r){SND.perc=r===4?0:r===6?.5:1}
+const SCALE=Object.values(HZ).map(f=>f*2);
+function chime(f,d,v){if(!SND.on)return;const n=SCALE.reduce((a,b)=>Math.abs(b-f)<Math.abs(a-f)?b:a);pluck(n,SND.ctx.currentTime+.01,d*.5,Math.min(.2,v*2.4))}
+$("soundBtn").addEventListener("click",soundToggle);
+
+// ---------- Buy or Don't Buy ----------
+const G={on:false,val:1e6,shown:1e6,dec:[],modal:false,final:false};
+const fm=v=>"AED "+(v/1e6).toFixed(2)+"m";
+const gm=$("gm"),gmCard=$("gmCard");
+function gameStart(){G.on=true;G.val=1e6;G.shown=1e6;G.dec=[];G.final=false;updPill();if(!st.intro)maybePrompt()}
+function updPill(){const p=$("pill");p.hidden=false;
+ if(!G.on){$("pillV").textContent="Play";$("pillS").textContent="Buy or Don't Buy";return}
+ $("pillV").textContent=fm(G.shown);$("pillS").textContent=G.dec.length<GAME.length?`${G.dec.length} / ${GAME.length} calls`:"see result"}
+$("pill").addEventListener("click",()=>{if(!G.on){gameStart();toast("Game on. Your first call waits in Room III.");return}if(G.dec.length===GAME.length)showFinal();else maybePrompt(true)});
+function countUp(el,from,to,ms){if(RM){el.textContent=fm(to);return}const t0=performance.now();(function s(n){const t=Math.min(1,(n-t0)/ms),e=1-Math.pow(1-t,3);el.textContent=fm(from+(to-from)*e);if(t<1)requestAnimationFrame(s)})(t0)}
+function openModal(col){G.modal=true;st.keys={};gm.style.setProperty("--gmc",col);gmCard.style.setProperty("--gmc",col);gm.hidden=false}
+function closeModal(){G.modal=false;gm.hidden=true}
+function maybePrompt(force){if(!G.on||G.modal||st.intro)return;const k=G.dec.length;if(k>=GAME.length)return;
+ if(GAME[k].r<=st.room)openDecision(k);else if(force)toast(`Your next call waits in Room ${ROMAN[GAME[k].r]}.`)}
+function prevHTML(k){if(!k)return"";const d=GAME[k-1],c=G.dec[k-1],m=c.buy?d.prop:d.cash,up=m>=1;
+ return`<div class="gm-prev"><p class="k">${d.era} · you ${c.buy?"bought":"held cash"} · ×${m}</p><p class="v" id="gmV" style="color:${up?"var(--green)":"var(--redhi)"}">${fm(c.before)}</p><p class="o">${d.out}</p></div>`}
+function openDecision(k){const d=GAME[k];
+ gmCard.innerHTML=`<p class="gm-eye">Buy or Don't Buy · call ${k+1} of ${GAME.length}</p>${prevHTML(k)}
+ <p class="gm-when">${d.when} · Room ${ROMAN[d.r]}</p><h2>${d.q}</h2><p class="gm-ctx">${d.ctx} You hold <b style="color:var(--paper)">${fm(G.val)}</b>.</p>
+ <div class="gm-btns"><button id="gmBuy" type="button"><b>BUY</b><span>hold property ${d.era}</span></button><button id="gmCash" type="button"><b>DON'T BUY</b><span>sit in cash ${d.era}</span></button></div>
+ <p class="gm-fine">Illustrative, rounded multipliers combining approximate price moves and rent (property) or deposit interest (cash). Educational, not investment advice.</p>
+ <button class="gm-link" id="gmQuit" type="button">Stop playing and just walk</button>`;
+ openModal(ROOMS[d.r].acc);
+ if(k){const c=G.dec[k-1];countUp($("gmV"),c.before,c.after,1100);G.shown=c.after;updPill()}
+ $("gmBuy").addEventListener("click",()=>decide(k,true));$("gmCash").addEventListener("click",()=>decide(k,false));
+ $("gmQuit").addEventListener("click",()=>{G.on=false;closeModal();updPill()});
+ setTimeout(()=>{const b=$("gmBuy");if(b)b.focus()},50);chime(392,1.8,.06)}
+function decide(k,buy){const d=GAME[k],before=G.val,after=before*(buy?d.prop:d.cash);G.dec.push({buy,before,after});G.val=after;closeModal();updPill();
+ chime(buy?784:330,1.2,.07);
+ toast(k<GAME.length-1?`Call locked: ${buy?"BUY":"DON'T BUY"}. You'll see how it played out in Room ${ROMAN[GAME[k+1].r]}.`:"Last call locked. Walk to the end wall of Room VIII for your result.");
+ setTimeout(()=>maybePrompt(),600)}
+function showFinal(){G.final=true;const n=GAME.length;let allP=1e6,allC=1e6,best=1e6;GAME.forEach(d=>{allP*=d.prop;allC*=d.cash;best*=Math.max(d.prop,d.cash)});
+ const you=G.val,ratio=you/best,calls=G.dec.filter((c,i)=>c.buy===(GAME[i].prop>GAME[i].cash)).length;
+ let rank,say;
+ if(ratio>.95){rank="Perfect cycle reader";say="You sat out the crash and the long slide and owned everything else. Very few real investors can say that."}
+ else if(G.dec.every(c=>!c.buy)){rank="Sat it out";say="Cash was safe, and it cost you most of the cycle. Not buying is a decision too, with its own price."}
+ else if(you>=allP){rank="Beat buy-and-hold";say="Your timing added value. Most people who try to time Dubai end up behind someone who simply held."}
+ else if(you>=allC*1.3){rank="Rode the wave";say="You made money, but just holding property the whole way would have made more. The costly calls were the ones made on headlines."}
+ else{rank="Bought the brochure";say="Bought near the tops, sold near the bottoms. That is exactly the buyer the launch brochures are designed for."}
+ const mx=Math.max(best,you,allP,allC);const bar=(l,v,c)=>`<div class="bar"><span>${l}</span><i style="width:${Math.max(3,v/mx*100)}%;--bc:${c}"></i><em>${fm(v)}</em></div>`;
+ gmCard.innerHTML=`<p class="gm-eye">Buy or Don't Buy · final result · 2002 → mid 2026</p>
+ <p class="gm-big" id="gmBig">${fm(1e6)}</p><p class="gm-rank">${rank}</p><p class="gm-say">${say} ${calls} of ${n} calls matched what happened.</p>
+ <div class="bars">${bar("You",you,"#D4AE5E")}${bar("Perfect timing",best,"#3FB48F")}${bar("Always bought",allP,"#6FA3BC")}${bar("Always cash",allC,"#7C7570")}</div>
+ <ol class="calls">${GAME.map((d,i)=>{const c=G.dec[i],ok=c.buy===(d.prop>d.cash);return`<li><span class="e">${d.era}</span><span>You: ${c.buy?"Buy":"Don't buy"}</span><span class="${ok?"ok":"no"}">${ok?"✓ right call":"✗ "+(d.prop>d.cash?"should buy":"should wait")}</span></li>`}).join("")}</ol>
+ <p class="gm-share">Screenshot this and tag @eugene.therealtor · <a href="https://www.youtube.com/@EugeneUnfiltered" target="_blank" rel="noopener">▶ More on YouTube</a></p>
+ <div class="gm-row"><button class="pri" id="gmAgain" type="button">Play again</button><button id="gmClose" type="button">Keep walking</button></div>
+ <p class="gm-fine">Illustrative, rounded multipliers combining approximate price moves and rent (property) or deposit interest (cash). Educational, not investment advice.</p>`;
+ openModal("#D4AE5E");countUp($("gmBig"),1e6,you,1600);G.shown=you;updPill();[0,1,2,3].forEach(k=>setTimeout(()=>chime(523*Math.pow(1.19,k),1.4,.05),k*140));
+ $("gmClose").addEventListener("click",closeModal);
+ $("gmAgain").addEventListener("click",()=>{closeModal();G.on=true;G.val=1e6;G.shown=1e6;G.dec=[];G.final=false;updPill();go(firstIdx[3])})}
+
+// ---------- input ----------
+addEventListener("keydown",ev=>{if(st.intro||G.modal)return;if(ev.target.closest&&ev.target.closest("button")&&(ev.key===" "||ev.key==="Enter"))return;
+ if(ev.key==="ArrowRight"){ev.preventDefault();go(st.idx+1);return}
+ if(ev.key==="ArrowLeft"){ev.preventDefault();go(st.idx<0?0:st.idx-1);return}
+ if(["ArrowUp","ArrowDown","KeyW","KeyA","KeyS","KeyD"].includes(ev.code)){ev.preventDefault();st.keys[ev.code]=true;st.anim=null}});
+addEventListener("keyup",ev=>{st.keys[ev.code]=false});
+addEventListener("blur",()=>{st.keys={}});
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let drag=null;
+canvas.addEventListener("pointerdown",ev=>{drag={x:ev.clientX,y:ev.clientY,moved:0,id:ev.pointerId};try{canvas.setPointerCapture(ev.pointerId)}catch(_){}});
+canvas.addEventListener("pointermove",ev=>{if(!drag||st.intro)return;const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;drag.moved+=Math.abs(dx)+Math.abs(dy);drag.x=ev.clientX;drag.y=ev.clientY;
+ if(drag.moved>5){if(st.anim){st.yaw=cam.rotation.y;st.pitch=cam.rotation.x;st.anim=null}st.yaw+=dx*.0045;st.pitch=Math.max(-1.1,Math.min(1.1,st.pitch+dy*.0045))}});
+canvas.addEventListener("pointerup",ev=>{if(!drag)return;const click=drag.moved<=6;drag=null;if(!click||st.intro)return;
+ const rc=canvas.getBoundingClientRect();ndc.set((ev.clientX-rc.left)/rc.width*2-1,-(ev.clientY-rc.top)/rc.height*2+1);ray.setFromCamera(ndc,cam);
+ const hit=ray.intersectObjects(pick,false)[0];if(!hit)return;
+ if(hit.object.userData.ex!==undefined){go(hit.object.userData.ex);return}
+ if(hit.object.userData.floor){const p=hit.point;if(hit.distance>30)return;let tx=p.x,tz=p.z;if(blocked(tx,tz))return;pathTo({x:tx,z:tz,yaw:null,pitch:.02})}});
+canvas.addEventListener("pointercancel",()=>{drag=null});
+
+// ---------- loop ----------
+let last=performance.now(),ready=false;
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(st.intro){st.yaw=Math.sin(now*.00012)*.22;st.pitch=.05}
+ else if(st.anim){const a=st.anim;a.t+=dt;const t=Math.min(1,a.t/a.dur),e=ease(t);let d=e*a.len,i=0;
+  while(i<a.seg.length-1&&d>a.seg[i]){d-=a.seg[i];i++}const p0=a.pts[i],p1=a.pts[i+1],f=a.seg[i]?Math.min(1,d/a.seg[i]):1;
+  st.x=p0.x+(p1.x-p0.x)*f;st.z=p0.z+(p1.z-p0.z)*f;
+  if(a.walk){const k=Math.min(1,dt*(t<.78?4:6));if(t<.78&&a.seg[i]>.01){const hy=Math.atan2(-(p1.x-p0.x),-(p1.z-p0.z));st.yaw+=angDiff(hy,st.yaw)*k;st.pitch+=(.02-st.pitch)*k}else{st.yaw+=angDiff(a.ty,st.yaw)*k;st.pitch+=(a.tp-st.pitch)*k}}
+  else{st.yaw=a.fy+(a.ty-a.fy)*e;st.pitch=a.fp+(a.tp-a.fp)*e}
+  if(t>=1){st.yaw=a.ty;st.pitch=a.tp;st.anim=null}}
+ else{const k=st.keys;const f=((k.KeyW||k.ArrowUp)?1:0)-((k.KeyS||k.ArrowDown)?1:0),sd=(k.KeyD?1:0)-(k.KeyA?1:0);
+  if(f||sd){const sp=4.4*dt,fx=-Math.sin(st.yaw),fz=-Math.cos(st.yaw),rx=Math.cos(st.yaw),rz=-Math.sin(st.yaw);const n=Math.hypot(f,sd);
+   const dx=(fx*f+rx*sd)/n*sp,dz=(fz*f+rz*sd)/n*sp;if(!blocked(st.x+dx,st.z))st.x+=dx;if(!blocked(st.x,st.z+dz))st.z+=dz}}
+ cam.position.set(st.x,EYE,st.z);cam.rotation.set(st.pitch,st.yaw,0);
+ const here=locate(st.x,st.z);if(!st.intro)setRoom(here.room);
+ for(const s of spinners)s.rotation.y+=dt*.3;
+ if(!RM)for(const b of bobs)b.o.position.y=b.y+Math.sin(now*.0016+b.y*9)*b.a;
+ const t=now/1000;if(!RM)updParticles(dt,t);updNeon();
+ X.forEach((e,i)=>{if(!e._glow)return;const s=i===st.idx?1.15+.12*Math.sin(t*3.2):1;e._glow.scale.set(s,s,1)});
+ if(ROOMS[4].flicker&&LIGHTS[4]){const fl=!RM&&Math.random()<.04?.35+Math.random()*.5:1;LIGHTS[4].intensity=1.3*fl}
+ if(!st.intro){frame.n=(frame.n||0)+1;if(frame.n%3===0)drawMini()}
+ if(G.on&&!G.modal&&!G.final&&G.dec.length===GAME.length&&here.room===8&&here.s>RR+2*L-9)showFinal();
+ renderer.render(scene,cam);requestAnimationFrame(frame)}
+
+async function init(){
+ try{await Promise.race([Promise.all([F.disp(84),F.mono(28,"600"),F.mono(28),F.serif(34),F.serif(32,"italic")].map(f=>document.fonts.load(f))),new Promise(r=>setTimeout(r,3500))])}catch(_){}
+ buildHalls();setRoom(0);requestAnimationFrame(frame);
+ ready=true;const b=$("enter");b.disabled=false;b.innerHTML='Play: Buy or Don\'t Buy <span aria-hidden="true">→</span>';$("walk").disabled=false;
+}
+init();
+})();
+</script>
+</body>
+</html>
